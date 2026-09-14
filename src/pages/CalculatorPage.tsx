@@ -2,13 +2,12 @@ import { useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { LoanForm } from "@/components/calculator/loan-form";
 import { SummaryCards } from "@/components/calculator/summary-cards";
-import { BalanceChart } from "@/components/charts/balance-chart";
 import { PayoutPieChart } from "@/components/charts/payout-pie-chart";
 import { YearlyStructureChart } from "@/components/charts/yearly-structure-chart";
 import { CompareView } from "@/components/compare/compare-view";
 import { HistoryPanel } from "@/components/history/history-panel";
 import { EarlyPaymentsEditor } from "@/components/schedule/early-payments-editor";
-import { ScheduleTable } from "@/components/schedule/schedule-table";
+import { ScheduleExplorer } from "@/components/schedule/schedule-explorer";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -77,7 +76,7 @@ export default function CalculatorPage() {
 						<TabsTrigger value="charts">Графики</TabsTrigger>
 					</TabsList>
 					<TabsContent value="schedule" className="mt-4">
-						<ScheduleTable
+						<ScheduleExplorer
 							schedule={schedule}
 							onExportXlsx={() =>
 								exportScheduleToXlsx(input, schedule).then(() =>
@@ -86,12 +85,12 @@ export default function CalculatorPage() {
 							}
 						/>
 					</TabsContent>
-					<TabsContent value="charts" className="mt-4 space-y-4">
-						<BalanceChart schedule={schedule} />
-						<div className="grid gap-4 xl:grid-cols-2">
-							<YearlyStructureChart schedule={schedule} />
-							<PayoutPieChart schedule={schedule} />
-						</div>
+					<TabsContent
+						value="charts"
+						className="mt-4 grid gap-4 xl:grid-cols-2"
+					>
+						<YearlyStructureChart schedule={schedule} />
+						<PayoutPieChart schedule={schedule} />
 					</TabsContent>
 				</Tabs>
 

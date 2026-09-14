@@ -98,7 +98,7 @@ export function CompareView({ currentInput }: CompareViewProps) {
 
 	return (
 		<Card>
-			<CardHeader className="flex-row items-start justify-between space-y-0">
+			<CardHeader className="flex flex-row items-start justify-between space-y-0">
 				<div className="space-y-1.5">
 					<CardTitle>Сравнение сценариев</CardTitle>
 					<CardDescription>

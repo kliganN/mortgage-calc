@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
 	Bar,
 	BarChart,
@@ -10,6 +10,7 @@ import {
 	YAxis,
 } from "recharts";
 import { ChartCard } from "@/components/charts/chart-card";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { ScheduleResult } from "@/lib/calc";
 import { formatRub } from "@/lib/format";
 
@@ -17,27 +18,74 @@ interface YearlyStructureChartProps {
 	schedule: ScheduleResult;
 }
 
-/** Состав платежей по календарным годам: тело (+ досрочные) и проценты. */
+type Granularity = "years" | "months";
+
+const monthNames = [
+	"январь",
+	"февраль",
+	"март",
+	"апрель",
+	"май",
+	"июнь",
+	"июль",
+	"август",
+	"сентябрь",
+	"октябрь",
+	"ноябрь",
+	"декабрь",
+];
+
+/** Состав платежей: тело (+ досрочные) и проценты, агрегация по годам или месяцам. */
 export function YearlyStructureChart({ schedule }: YearlyStructureChartProps) {
+	const [granularity, setGranularity] = useState<Granularity>("years");
+
 	const data = useMemo(() => {
-		const byYear = new Map<string, { Тело: number; Проценты: number }>();
+		const byKey = new Map<
+			string,
+			{ Тело: number; Проценты: number; order: number }
+		>();
 		for (const row of schedule.rows) {
-			const year = row.date.slice(0, 4);
-			const acc = byYear.get(year) ?? { Тело: 0, Проценты: 0 };
+			const key =
+				granularity === "years" ? row.date.slice(0, 4) : row.date.slice(0, 7);
+			const acc = byKey.get(key) ?? {
+				Тело: 0,
+				Проценты: 0,
+				order: row.monthIndex,
+			};
 			acc.Тело += (row.principal + row.extraPaid) / 100;
 			acc.Проценты += row.interest / 100;
-			byYear.set(year, acc);
+			byKey.set(key, acc);
 		}
-		return [...byYear.entries()].map(([year, v]) => ({ year, ...v }));
-	}, [schedule.rows]);
+		return [...byKey.entries()]
+			.sort((a, b) => a[1].order - b[1].order)
+			.map(([key, v]) => ({ key, ...v }));
+	}, [schedule.rows, granularity]);
+
+	const monthView = granularity === "months";
 
 	if (data.length === 0) return null;
 
 	return (
 		<ChartCard
-			title="Состав платежей по годам"
-			description="Тело кредита (включая досрочные) и проценты"
+			title="Состав платежей"
+			description={
+				monthView
+					? "По месяцам — удобно на коротких сроках"
+					: "Тело кредита (включая досрочные) и проценты по годам"
+			}
 		>
+			<div className="mb-2 flex justify-end">
+				<ToggleGroup
+					type="single"
+					variant="outline"
+					size="sm"
+					value={granularity}
+					onValueChange={(v) => v && setGranularity(v as Granularity)}
+				>
+					<ToggleGroupItem value="years">По годам</ToggleGroupItem>
+					<ToggleGroupItem value="months">По месяцам</ToggleGroupItem>
+				</ToggleGroup>
+			</div>
 			<div className="h-72">
 				<ResponsiveContainer width="100%" height="100%">
 					<BarChart
@@ -49,7 +97,15 @@ export function YearlyStructureChart({ schedule }: YearlyStructureChartProps) {
 							strokeDasharray="4 4"
 							vertical={false}
 						/>
-						<XAxis dataKey="year" tick={{ fontSize: 11 }} tickLine={false} />
+						<XAxis
+							dataKey="key"
+							tick={{ fontSize: 10 }}
+							tickLine={false}
+							interval={Math.max(1, Math.ceil(data.length / 12)) - 1}
+							tickFormatter={(v: string) =>
+								monthView ? `${v.slice(5)}.${v.slice(2, 4)}` : v
+							}
+						/>
 						<YAxis
 							tick={{ fontSize: 11 }}
 							tickLine={false}
@@ -63,6 +119,12 @@ export function YearlyStructureChart({ schedule }: YearlyStructureChartProps) {
 						/>
 						<Tooltip
 							formatter={(value) => formatRub(Number(value) * 100)}
+							labelFormatter={(label) => {
+								const key = String(label ?? "");
+								return monthView
+									? `${monthNames[Number(key.slice(5, 7)) - 1] ?? ""} ${key.slice(0, 4)}`
+									: `${key} год`;
+							}}
 							contentStyle={{
 								background: "var(--popover)",
 								border: "1px solid var(--border)",
@@ -71,16 +133,11 @@ export function YearlyStructureChart({ schedule }: YearlyStructureChartProps) {
 							}}
 						/>
 						<Legend />
-						<Bar
-							dataKey="Тело"
-							stackId="a"
-							fill="var(--chart-2)"
-							radius={[0, 0, 0, 0]}
-						/>
+						<Bar dataKey="Тело" stackId="a" fill="var(--chart-1)" />
 						<Bar
 							dataKey="Проценты"
 							stackId="a"
-							fill="var(--chart-1)"
+							fill="var(--chart-2)"
 							radius={[4, 4, 0, 0]}
 						/>
 					</BarChart>

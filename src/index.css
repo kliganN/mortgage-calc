@@ -48,73 +48,76 @@
 	--radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* Палитра «Изумруд финтех»: тёплый светлый фон / глубокий зелёный в тёмной теме.
+   Семантика графиков: chart-1 — тело кредита, chart-2 — проценты (расход),
+   chart-3 — сравнение сценариев, chart-4 — досрочные платежи и выгода. */
 :root {
-	--background: oklch(1 0 0);
-	--foreground: oklch(0.145 0 0);
-	--card: oklch(1 0 0);
-	--card-foreground: oklch(0.145 0 0);
-	--popover: oklch(1 0 0);
-	--popover-foreground: oklch(0.145 0 0);
-	--primary: oklch(0.205 0 0);
-	--primary-foreground: oklch(0.985 0 0);
-	--secondary: oklch(0.97 0 0);
-	--secondary-foreground: oklch(0.205 0 0);
-	--muted: oklch(0.97 0 0);
-	--muted-foreground: oklch(0.556 0 0);
-	--accent: oklch(0.97 0 0);
-	--accent-foreground: oklch(0.205 0 0);
-	--destructive: oklch(0.577 0.245 27.325);
-	--border: oklch(0.922 0 0);
-	--input: oklch(0.922 0 0);
-	--ring: oklch(0.708 0 0);
-	--chart-1: oklch(0.87 0 0);
-	--chart-2: oklch(0.556 0 0);
-	--chart-3: oklch(0.439 0 0);
-	--chart-4: oklch(0.371 0 0);
-	--chart-5: oklch(0.269 0 0);
+	--background: #f8faf7;
+	--foreground: #0f1f17;
+	--card: #ffffff;
+	--card-foreground: #0f1f17;
+	--popover: #ffffff;
+	--popover-foreground: #0f1f17;
+	--primary: #059669;
+	--primary-foreground: #f0fdf7;
+	--secondary: #e7f2ec;
+	--secondary-foreground: #14532d;
+	--muted: #eef4f0;
+	--muted-foreground: #5f7268;
+	--accent: #e0f0e8;
+	--accent-foreground: #14532d;
+	--destructive: #dc2626;
+	--border: #dde8e2;
+	--input: #d5e3db;
+	--ring: #0a9e75;
+	--chart-1: #059669;
+	--chart-2: #e85d4a;
+	--chart-3: #0d9488;
+	--chart-4: #d97706;
+	--chart-5: #64748b;
 	--radius: 0.625rem;
-	--sidebar: oklch(0.985 0 0);
-	--sidebar-foreground: oklch(0.145 0 0);
-	--sidebar-primary: oklch(0.205 0 0);
-	--sidebar-primary-foreground: oklch(0.985 0 0);
-	--sidebar-accent: oklch(0.97 0 0);
-	--sidebar-accent-foreground: oklch(0.205 0 0);
-	--sidebar-border: oklch(0.922 0 0);
-	--sidebar-ring: oklch(0.708 0 0);
+	--sidebar: #f2f7f3;
+	--sidebar-foreground: #0f1f17;
+	--sidebar-primary: #059669;
+	--sidebar-primary-foreground: #f0fdf7;
+	--sidebar-accent: #e0f0e8;
+	--sidebar-accent-foreground: #14532d;
+	--sidebar-border: #dde8e2;
+	--sidebar-ring: #0a9e75;
 }
 
 .dark {
-	--background: oklch(0.145 0 0);
-	--foreground: oklch(0.985 0 0);
-	--card: oklch(0.205 0 0);
-	--card-foreground: oklch(0.985 0 0);
-	--popover: oklch(0.205 0 0);
-	--popover-foreground: oklch(0.985 0 0);
-	--primary: oklch(0.922 0 0);
-	--primary-foreground: oklch(0.205 0 0);
-	--secondary: oklch(0.269 0 0);
-	--secondary-foreground: oklch(0.985 0 0);
-	--muted: oklch(0.269 0 0);
-	--muted-foreground: oklch(0.708 0 0);
-	--accent: oklch(0.269 0 0);
-	--accent-foreground: oklch(0.985 0 0);
-	--destructive: oklch(0.704 0.191 22.216);
+	--background: #0a1410;
+	--foreground: #ecf5f0;
+	--card: #11201a;
+	--card-foreground: #ecf5f0;
+	--popover: #132420;
+	--popover-foreground: #ecf5f0;
+	--primary: #34d399;
+	--primary-foreground: #052e22;
+	--secondary: #1a2c24;
+	--secondary-foreground: #d1fae5;
+	--muted: #16261f;
+	--muted-foreground: #8fa89c;
+	--accent: #1e3129;
+	--accent-foreground: #d1fae5;
+	--destructive: #f87171;
 	--border: oklch(1 0 0 / 10%);
 	--input: oklch(1 0 0 / 15%);
-	--ring: oklch(0.556 0 0);
-	--chart-1: oklch(0.87 0 0);
-	--chart-2: oklch(0.556 0 0);
-	--chart-3: oklch(0.439 0 0);
-	--chart-4: oklch(0.371 0 0);
-	--chart-5: oklch(0.269 0 0);
-	--sidebar: oklch(0.205 0 0);
-	--sidebar-foreground: oklch(0.985 0 0);
-	--sidebar-primary: oklch(0.488 0.243 264.376);
-	--sidebar-primary-foreground: oklch(0.985 0 0);
-	--sidebar-accent: oklch(0.269 0 0);
-	--sidebar-accent-foreground: oklch(0.985 0 0);
+	--ring: #34d399;
+	--chart-1: #34d399;
+	--chart-2: #fb8a75;
+	--chart-3: #2dd4bf;
+	--chart-4: #fbbf24;
+	--chart-5: #94a3b8;
+	--sidebar: #11201a;
+	--sidebar-foreground: #ecf5f0;
+	--sidebar-primary: #34d399;
+	--sidebar-primary-foreground: #052e22;
+	--sidebar-accent: #1e3129;
+	--sidebar-accent-foreground: #d1fae5;
 	--sidebar-border: oklch(1 0 0 / 10%);
-	--sidebar-ring: oklch(0.556 0 0);
+	--sidebar-ring: #34d399;
 }
 
 @layer base {
@@ -127,6 +130,24 @@
 	html {
 		@apply font-sans;
 	}
+	::selection {
+		background-color: color-mix(in oklab, var(--primary) 22%, transparent);
+	}
+}
+
+/* Липкие шапка и футер таблицы внутри скролл-контейнера .sticky-table */
+.sticky-table [data-slot="table-head"] {
+	position: sticky;
+	top: 0;
+	z-index: 1;
+	background: var(--card);
+}
+
+.sticky-table [data-slot="table-footer"] {
+	position: sticky;
+	bottom: 0;
+	z-index: 1;
+	background: var(--card);
 }
 
 /* Печатная версия отчёта: поля страницы и светлые цвета без экранных тем. */
