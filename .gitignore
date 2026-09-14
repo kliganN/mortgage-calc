@@ -1,0 +1,39 @@
+# Зависимости
+node_modules
+
+# Сборка
+dist
+dist-ssr
+
+# Логи
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Секреты и переменные окружения (шаблон .env.example не игнорируем)
+.env
+.env.*
+!.env.example
+
+# Локальные переопределения и артефакты инструментов
+*.local
+*.tsbuildinfo
+coverage
+
+# Кэш Vite (вне node_modules на старых версиях)
+.vite
+
+# Локальные артефакты ассистента ZCode
+.zcode/
+
+# Редакторы и ОС
+.DS_Store
+.idea
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.sw?
