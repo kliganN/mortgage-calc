@@ -1,7 +1,7 @@
-import { cn } from "cn";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "cn";
 
 interface NumberFieldProps {
 	id: string;
@@ -19,7 +19,7 @@ interface NumberFieldProps {
 	max?: number;
 }
 
-/** Разбирает ввод: пробелы-разделители, запятая как десятичный разделитель. */
+/** Разбирает готовый текст в число: пробелы-разделители, запятая как десятичный разделитель. */
 function parseNumber(text: string, decimal: boolean): number | null {
 	const cleaned = text.replace(/\s/g, "").replace(",", ".");
 	if (cleaned === "" || cleaned === ".") return null;
@@ -27,11 +27,62 @@ function parseNumber(text: string, decimal: boolean): number | null {
 	return Number.isFinite(n) ? n : null;
 }
 
+const GROUP = "\u00A0"; // неразрывный пробел, как в Intl ru-RU
+
 /**
- * Числовое поле: пока поле в фокусе — показываем «сырой» текст пользователя,
- * после потери фокуса — отформатированное число. Значение в стор уходит
- * на каждый ввод; прижимание к min/max происходит только на blur, чтобы не
- * ломать ввод по цифрам (см. историю с автозаполнением в GUI-тесте).
+ * Форматирует «сырой» ввод на лету: группы по 3 цифры, одна запятая для дроби.
+ * Возвращает текст для показа и число для стора (null — значимого ввода нет).
+ * Ведущие нули сохраняются, «,5» превращается в «0,5».
+ */
+function formatAsYouType(
+	raw: string,
+	decimal: boolean,
+): { text: string; value: number | null } {
+	let int = "";
+	let frac = "";
+	let hasSep = false;
+	for (const ch of raw) {
+		if (/\d/.test(ch)) {
+			if (hasSep) frac += ch;
+			else int += ch;
+		} else if (decimal && (ch === "," || ch === ".") && !hasSep) {
+			hasSep = true;
+		}
+	}
+	if (int === "" && !hasSep) return { text: "", value: null };
+
+	const grouped = int.replace(/\B(?=(\d{3})+(?!\d))/g, GROUP);
+	const text = hasSep ? `${grouped},${frac}` : grouped;
+	const value = decimal
+		? Number(`${int === "" ? "0" : int}.${frac === "" ? "0" : frac}`)
+		: Number.parseInt(int, 10);
+	return { text, value: Number.isFinite(value) ? value : null };
+}
+
+/** Считает «значимые» символы (цифры и запятая) в начале строки до курсора. */
+function significantBefore(text: string, caret: number): number {
+	return text
+		.slice(0, caret)
+		.split("")
+		.filter((ch) => /\d|,/.test(ch)).length;
+}
+
+/** Позиция курсора в отформатированном тексте после N значимых символов. */
+function caretForSignificant(text: string, significant: number): number {
+	let seen = 0;
+	for (let i = 0; i < text.length; i++) {
+		if (/[\d,]/.test(text[i] ?? "")) {
+			seen++;
+			if (seen >= significant) return i + 1;
+		}
+	}
+	return text.length;
+}
+
+/**
+ * Числовое поле с разделителями тысяч прямо во время ввода («1 000 000»).
+ * Значение в стор уходит на каждый ввод; прижимание к min/max — на blur,
+ * чтобы не ломать ввод по цифрам. Курсор сохраняет позицию относительно цифр.
  */
 export function NumberField({
 	id,
@@ -47,6 +98,7 @@ export function NumberField({
 }: NumberFieldProps) {
 	// null — показываем форматированное значение из стора.
 	const [draft, setDraft] = useState<string | null>(null);
+	const inputRef = useRef<HTMLInputElement>(null);
 
 	const clamp = (n: number): number => {
 		let v = n;
@@ -65,6 +117,7 @@ export function NumberField({
 			<div className="relative">
 				<Input
 					id={id}
+					ref={inputRef}
 					inputMode={decimal ? "decimal" : "numeric"}
 					value={display}
 					onBlur={() => {
@@ -75,9 +128,21 @@ export function NumberField({
 						setDraft(null);
 					}}
 					onChange={(e) => {
-						setDraft(e.target.value);
-						const n = parseNumber(e.target.value, decimal);
+						const raw = e.target.value;
+						const { text, value: n } = formatAsYouType(raw, decimal);
+						// Восстанавливаем курсор: столько же значимых символов слева от него.
+						const caret =
+							e.target.selectionStart !== null
+								? caretForSignificant(
+										text,
+										significantBefore(raw, e.target.selectionStart),
+									)
+								: text.length;
+						setDraft(text);
 						if (n !== null) onChange(n);
+						requestAnimationFrame(() => {
+							inputRef.current?.setSelectionRange(caret, caret);
+						});
 					}}
 					aria-invalid={Boolean(error)}
 					className={cn("pr-12", error && "border-destructive")}

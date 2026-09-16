@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useId, useState } from "react";
 import { NumberField } from "@/components/number-field";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,10 @@ import { useRatePresetsStore } from "@/store/rate-presets";
 
 const DOWN_PAYMENT_SHARES = [15, 20, 30, 50];
 
+/** Границы срока кредита в годах (правило пользователя). */
+const MIN_YEARS = 1;
+const MAX_YEARS = 30;
+
 interface LoanFormProps {
 	/** Замечания валидации по имени поля. */
 	issues: Map<string, string>;
@@ -23,8 +27,9 @@ export function LoanForm({ issues }: LoanFormProps) {
 	const years = Math.round(input.termMonths / 12);
 	const termId = useId();
 
+	// Срок ограничен 1–30 годами (правило пользователя): слайдер и поле ввода.
 	const setYears = (y: number) =>
-		patch({ termMonths: Math.max(1, Math.min(50, y)) * 12 });
+		patch({ termMonths: Math.max(MIN_YEARS, Math.min(MAX_YEARS, y)) * 12 });
 	const setDownShare = (share: number) =>
 		patch({ downPayment: Math.round((input.propertyPrice * share) / 100) });
 
@@ -95,25 +100,20 @@ export function LoanForm({ issues }: LoanFormProps) {
 				<div className="flex items-center gap-4">
 					<Slider
 						id={termId}
-						min={12}
-						max={600}
+						min={MIN_YEARS * 12}
+						max={MAX_YEARS * 12}
 						step={12}
-						value={[Math.round(input.termMonths / 12) * 12]}
+						value={[
+							Math.max(
+								MIN_YEARS * 12,
+								Math.min(MAX_YEARS * 12, Math.round(input.termMonths / 12) * 12),
+							),
+						]}
 						onValueChange={([v]) => patch({ termMonths: v })}
 						className="flex-1"
 						aria-label="Срок кредита в месяцах"
 					/>
-					<Input
-						type="number"
-						min={1}
-						max={50}
-						value={years}
-						onChange={(e) => setYears(Number(e.target.value))}
-						onBlur={(e) => {
-							if (e.target.value === "") setYears(1);
-						}}
-						className="w-20"
-					/>
+					<TermYearsInput years={years} onCommit={setYears} />
 					<span className="text-sm text-muted-foreground">
 						{years} {plural(years, ["год", "года", "лет"])}
 					</span>
@@ -176,5 +176,35 @@ function StartMonthField() {
 				<p className="text-xs text-destructive">Укажите корректную дату</p>
 			)}
 		</div>
+	);
+}
+
+/**
+ * Поле «лет» для срока кредита: черновик во время ввода — значение можно
+ * стереть полностью и ввести заново; прижимание к 1–30 происходит на blur,
+ * чтобы промежуточный ввод («2» из «20») не прыгал к границам.
+ */
+function TermYearsInput({
+	years,
+	onCommit,
+}: {
+	years: number;
+	onCommit: (years: number) => void;
+}) {
+	const [draft, setDraft] = useState<string | null>(null);
+
+	return (
+		<Input
+			inputMode="numeric"
+			value={draft ?? String(years)}
+			onChange={(e) => setDraft(e.target.value.replace(/\D/g, "").slice(0, 2))}
+			onBlur={() => {
+				const n = Number.parseInt(draft ?? "", 10);
+				if (Number.isFinite(n)) onCommit(n);
+				setDraft(null);
+			}}
+			aria-label="Срок кредита в годах"
+			className="w-20"
+		/>
 	);
 }
