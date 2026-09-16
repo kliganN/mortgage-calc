@@ -1,4 +1,5 @@
-import { Link, Outlet } from "react-router";
+import { cn } from "cn";
+import { Link, NavLink, Outlet } from "react-router";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -16,9 +17,32 @@ export default function App() {
 								Ипотечный калькулятор
 							</Link>
 							<div className="flex items-center gap-1">
-								<Button variant="ghost" size="sm" asChild>
-									<Link to="/report">Отчёт для печати</Link>
-								</Button>
+								<NavLink to="/calculator">
+									{({ isActive }) => (
+										<Button
+											variant="ghost"
+											size="sm"
+											className={cn(
+												isActive && "bg-accent text-accent-foreground",
+											)}
+										>
+											Калькулятор
+										</Button>
+									)}
+								</NavLink>
+								<NavLink to="/report">
+									{({ isActive }) => (
+										<Button
+											variant="ghost"
+											size="sm"
+											className={cn(
+												isActive && "bg-accent text-accent-foreground",
+											)}
+										>
+											Отчёт для печати
+										</Button>
+									)}
+								</NavLink>
 								<ThemeToggle />
 							</div>
 						</div>

@@ -106,7 +106,10 @@ export function LoanForm({ issues }: LoanFormProps) {
 						value={[
 							Math.max(
 								MIN_YEARS * 12,
-								Math.min(MAX_YEARS * 12, Math.round(input.termMonths / 12) * 12),
+								Math.min(
+									MAX_YEARS * 12,
+									Math.round(input.termMonths / 12) * 12,
+								),
 							),
 						]}
 						onValueChange={([v]) => patch({ termMonths: v })}
