@@ -17,12 +17,8 @@ export default function LandingPage() {
 	}
 
 	return (
-		<section className="relative overflow-hidden">
-			<div
-				aria-hidden
-				className="pointer-events-none absolute top-[-160px] left-1/2 h-[420px] w-[720px] max-w-full -translate-x-1/2 rounded-full bg-primary/10 blur-3xl"
-			/>
-			<div className="relative mx-auto flex max-w-3xl flex-col items-center px-4 py-24 text-center sm:py-32 lg:py-40">
+		<section className="relative">
+			<div className="relative mx-auto flex max-w-3xl flex-col items-center px-4 pt-8 pb-24 text-center sm:pt-12 sm:pb-32 lg:pt-14 lg:pb-40">
 				<Link
 					to="/calculator"
 					className="group inline-flex items-center gap-2 rounded-full border bg-primary/5 px-4 py-1.5 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"

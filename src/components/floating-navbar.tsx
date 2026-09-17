@@ -45,10 +45,12 @@ export function FloatingNavbar() {
 	const { pathname } = useLocation();
 
 	return (
-		<div className="flex justify-center px-4 pt-4 print:hidden">
+		// Накладывается поверх верха страницы (absolute, не fixed): контент начинается
+		// под панелью, при прокрутке уезжает вместе со страницей.
+		<div className="pointer-events-none absolute inset-x-0 top-4 z-40 flex justify-center px-4 print:hidden">
 			<nav
 				aria-label="Основная навигация"
-				className="flex items-center gap-1 rounded-full border border-border/70 bg-background/70 py-1.5 pr-1.5 pl-2 shadow-lg shadow-black/5 backdrop-blur-md"
+				className="pointer-events-auto flex items-center gap-1 rounded-full border border-border/70 bg-background/70 py-1.5 pr-1.5 pl-2 shadow-lg shadow-black/5 backdrop-blur-md"
 			>
 				<Link
 					to="/"
