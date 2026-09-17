@@ -40,6 +40,9 @@ const LINKS: NavLinkItem[] = [
 /** Пружина «жидкого» перетекания капли между пунктами. */
 const PILL_SPRING = { stiffness: 380, damping: 32 };
 
+/** Пружина «линзы»: текст чуть резче капли набирает и отпускает масштаб. */
+const TEXT_SPRING = { stiffness: 480, damping: 26 };
+
 /**
  * SVG-фильтр преломления — фирменный приём «жидкого стекла» iOS 26:
  * фон за каплей искажается (лепестки шума → смещение пикселей), как будто
@@ -226,7 +229,17 @@ function NavLinks() {
 								: "text-muted-foreground hover:text-foreground",
 						)}
 					>
-						{link.label}
+						{/* Текст «линзуется»: увеличивается, когда капля стекла над ним,
+						    как при преломлении через выпуклую линзу. transform не меняет
+						    layout — измерения капли остаются точными. */}
+						<motion.span
+							className="inline-block"
+							initial={false}
+							animate={{ scale: pillHere ? 1.09 : 1 }}
+							transition={TEXT_SPRING}
+						>
+							{link.label}
+						</motion.span>
 					</Link>
 				);
 			})}
