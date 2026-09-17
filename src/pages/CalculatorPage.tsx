@@ -2,15 +2,12 @@ import { useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { LoanForm } from "@/components/calculator/loan-form";
 import { SummaryCards } from "@/components/calculator/summary-cards";
-import { PayoutPieChart } from "@/components/charts/payout-pie-chart";
-import { YearlyStructureChart } from "@/components/charts/yearly-structure-chart";
 import { CompareView } from "@/components/compare/compare-view";
 import { HistoryPanel } from "@/components/history/history-panel";
 import { EarlyPaymentsEditor } from "@/components/schedule/early-payments-editor";
 import { ScheduleExplorer } from "@/components/schedule/schedule-explorer";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { buildSchedule, validateLoanInput } from "@/lib/calc";
 import { exportScheduleToXlsx } from "@/lib/export/xlsx";
 import { decodeLoanInput } from "@/lib/url";
@@ -70,29 +67,14 @@ export default function CalculatorPage() {
 
 				<EarlyPaymentsEditor />
 
-				<Tabs defaultValue="schedule">
-					<TabsList>
-						<TabsTrigger value="schedule">График платежей</TabsTrigger>
-						<TabsTrigger value="charts">Графики</TabsTrigger>
-					</TabsList>
-					<TabsContent value="schedule" className="mt-4">
-						<ScheduleExplorer
-							schedule={schedule}
-							onExportXlsx={() =>
-								exportScheduleToXlsx(input, schedule).then(() =>
-									toast.success("Файл XLSX скачан"),
-								)
-							}
-						/>
-					</TabsContent>
-					<TabsContent
-						value="charts"
-						className="mt-4 grid gap-4 xl:grid-cols-2"
-					>
-						<YearlyStructureChart schedule={schedule} />
-						<PayoutPieChart schedule={schedule} />
-					</TabsContent>
-				</Tabs>
+				<ScheduleExplorer
+					schedule={schedule}
+					onExportXlsx={() =>
+						exportScheduleToXlsx(input, schedule).then(() =>
+							toast.success("Файл XLSX скачан"),
+						)
+					}
+				/>
 
 				<CompareView currentInput={input} />
 			</div>

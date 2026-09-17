@@ -86,7 +86,7 @@ export function YearlyStructureChart({ schedule }: YearlyStructureChartProps) {
 					<ToggleGroupItem value="months">По месяцам</ToggleGroupItem>
 				</ToggleGroup>
 			</div>
-			<div className="h-72">
+			<div className="h-80">
 				<ResponsiveContainer width="100%" height="100%">
 					<BarChart
 						data={data}
@@ -101,7 +101,8 @@ export function YearlyStructureChart({ schedule }: YearlyStructureChartProps) {
 							dataKey="key"
 							tick={{ fontSize: 10 }}
 							tickLine={false}
-							interval={Math.max(1, Math.ceil(data.length / 12)) - 1}
+							// Прореживаем подписи: ~6 меток на ширину графика, чтобы не слипались
+							interval={Math.max(1, Math.ceil(data.length / 6)) - 1}
 							tickFormatter={(v: string) =>
 								monthView ? `${v.slice(5)}.${v.slice(2, 4)}` : v
 							}
@@ -133,12 +134,20 @@ export function YearlyStructureChart({ schedule }: YearlyStructureChartProps) {
 							}}
 						/>
 						<Legend />
-						<Bar dataKey="Тело" stackId="a" fill="var(--chart-1)" />
+						{/* Без анимации: при смене маршрута ширина контейнера меняется,
+						    и анимация может застыть на промежуточном кадре. */}
+						<Bar
+							dataKey="Тело"
+							stackId="a"
+							fill="var(--chart-1)"
+							isAnimationActive={false}
+						/>
 						<Bar
 							dataKey="Проценты"
 							stackId="a"
 							fill="var(--chart-2)"
 							radius={[4, 4, 0, 0]}
+							isAnimationActive={false}
 						/>
 					</BarChart>
 				</ResponsiveContainer>

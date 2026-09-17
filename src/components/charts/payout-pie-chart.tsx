@@ -7,7 +7,6 @@ import {
 	type PieSectorDataItem,
 	ResponsiveContainer,
 	Sector,
-	Tooltip,
 } from "recharts";
 import { ChartCard } from "@/components/charts/chart-card";
 import type { ScheduleResult } from "@/lib/calc";
@@ -68,7 +67,7 @@ export function PayoutPieChart({ schedule }: PayoutPieChartProps) {
 			title="Структура выплат"
 			description="Наведите на сектор или подпись, чтобы увидеть долю"
 		>
-			<div className="relative h-72">
+			<div className="relative h-80">
 				<ResponsiveContainer width="100%" height="100%">
 					<PieChart>
 						<Pie
@@ -83,20 +82,16 @@ export function PayoutPieChart({ schedule }: PayoutPieChartProps) {
 							activeShape={activeSector}
 							onMouseEnter={(_, i) => setHovered(i)}
 							onMouseLeave={() => setHovered(null)}
+							// Без анимации: при переходе по маршруту контейнер меняет ширину,
+							// и анимация застывает, оставляя крошечный сектор.
+							isAnimationActive={false}
 						>
 							{data.map((entry) => (
 								<Cell key={entry.name} fill={entry.fill} />
 							))}
 						</Pie>
-						<Tooltip
-							formatter={(value) => formatRub(Number(value) * 100)}
-							contentStyle={{
-								background: "var(--popover)",
-								border: "1px solid var(--border)",
-								borderRadius: 8,
-								color: "var(--popover-foreground)",
-							}}
-						/>
+						{/* Тултип не нужен: при наведении всю информацию показывает
+						    центр доната, а плашка тултипа накладывалась на него. */}
 						<Legend
 							formatter={(value) => (
 								<span className="text-sm">{String(value)}</span>
