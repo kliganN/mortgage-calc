@@ -2,7 +2,6 @@ import { cn } from "cn";
 import { Landmark } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import { toast } from "sonner";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 
 interface NavLinkItem {
@@ -31,8 +30,8 @@ const LINKS: NavLinkItem[] = [
 	},
 	{
 		label: "О нас",
-		to: "/",
-		isActive: (p) => p === "/",
+		to: "/about",
+		isActive: (p) => p === "/about",
 	},
 ];
 
@@ -98,7 +97,6 @@ export function FloatingNavbar() {
 				>
 					Вход
 				</Button>
-				<ThemeToggle />
 			</nav>
 		</div>
 	);

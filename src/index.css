@@ -48,7 +48,7 @@
 	--radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Палитра «Изумруд финтех»: тёплый светлый фон / глубокий зелёный в тёмной теме.
+/* Палитра «Изумруд финтех» — только светлая тема (тёмная удалена по решению пользователя).
    Семантика графиков: chart-1 — тело кредита, chart-2 — проценты (расход),
    chart-3 — сравнение сценариев, chart-4 — досрочные платежи и выгода. */
 :root {
@@ -84,40 +84,6 @@
 	--sidebar-accent-foreground: #14532d;
 	--sidebar-border: #dde8e2;
 	--sidebar-ring: #0a9e75;
-}
-
-.dark {
-	--background: #0a1410;
-	--foreground: #ecf5f0;
-	--card: #11201a;
-	--card-foreground: #ecf5f0;
-	--popover: #132420;
-	--popover-foreground: #ecf5f0;
-	--primary: #34d399;
-	--primary-foreground: #052e22;
-	--secondary: #1a2c24;
-	--secondary-foreground: #d1fae5;
-	--muted: #16261f;
-	--muted-foreground: #8fa89c;
-	--accent: #1e3129;
-	--accent-foreground: #d1fae5;
-	--destructive: #f87171;
-	--border: oklch(1 0 0 / 10%);
-	--input: oklch(1 0 0 / 15%);
-	--ring: #34d399;
-	--chart-1: #34d399;
-	--chart-2: #fb8a75;
-	--chart-3: #2dd4bf;
-	--chart-4: #fbbf24;
-	--chart-5: #94a3b8;
-	--sidebar: #11201a;
-	--sidebar-foreground: #ecf5f0;
-	--sidebar-primary: #34d399;
-	--sidebar-primary-foreground: #052e22;
-	--sidebar-accent: #1e3129;
-	--sidebar-accent-foreground: #d1fae5;
-	--sidebar-border: oklch(1 0 0 / 10%);
-	--sidebar-ring: #34d399;
 }
 
 @layer base {
