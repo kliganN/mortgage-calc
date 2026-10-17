@@ -7,6 +7,7 @@ import {
 	FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { numberInputCaret } from "@/lib/number-input";
 
 interface NumberFieldProps {
 	id: string;
@@ -63,26 +64,6 @@ function formatAsYouType(
 		? Number(`${int === "" ? "0" : int}.${frac === "" ? "0" : frac}`)
 		: Number.parseInt(int, 10);
 	return { text, value: Number.isFinite(value) ? value : null };
-}
-
-/** Считает «значимые» символы (цифры и запятая) в начале строки до курсора. */
-function significantBefore(text: string, caret: number): number {
-	return text
-		.slice(0, caret)
-		.split("")
-		.filter((ch) => /\d|,/.test(ch)).length;
-}
-
-/** Позиция курсора в отформатированном тексте после N значимых символов. */
-function caretForSignificant(text: string, significant: number): number {
-	let seen = 0;
-	for (let i = 0; i < text.length; i++) {
-		if (/[\d,]/.test(text[i] ?? "")) {
-			seen++;
-			if (seen >= significant) return i + 1;
-		}
-	}
-	return text.length;
 }
 
 /**
@@ -148,10 +129,7 @@ export function NumberField({
 						// Восстанавливаем курсор: столько же значимых символов слева от него.
 						const caret =
 							e.target.selectionStart !== null
-								? caretForSignificant(
-										text,
-										significantBefore(raw, e.target.selectionStart),
-									)
+								? numberInputCaret(raw, text, e.target.selectionStart)
 								: text.length;
 						setDraft(text);
 						if (n !== null) onChange(n);

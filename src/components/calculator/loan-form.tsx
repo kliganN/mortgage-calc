@@ -2,16 +2,6 @@ import { useId, useState } from "react";
 import { NumberField } from "@/components/number-field";
 import { Button } from "@/components/ui/button";
 import {
-	Dialog,
-	DialogClose,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from "@/components/ui/dialog";
-import {
 	Field,
 	FieldDescription,
 	FieldError,
@@ -23,7 +13,6 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { PaymentType } from "@/lib/calc";
 import { plural } from "@/lib/format";
 import { useLoanStore } from "@/store/loan";
-import { useRatePresetsStore } from "@/store/rate-presets";
 
 const DOWN_PAYMENT_SHARES = [15, 20, 30, 50];
 
@@ -38,7 +27,6 @@ interface LoanFormProps {
 
 export function LoanForm({ issues }: LoanFormProps) {
 	const { input, patch } = useLoanStore();
-	const { presets, updateRate } = useRatePresetsStore();
 	const [termUnit, setTermUnit] = useState("years");
 	const termId = useId();
 	const paymentTypeId = useId();
@@ -139,82 +127,17 @@ export function LoanForm({ issues }: LoanFormProps) {
 				<FieldDescription id={`${termId}-summary`}>{termHint}</FieldDescription>
 			</FieldGroup>
 
-			<FieldGroup className="gap-3">
-				<NumberField
-					id="annual-rate"
-					label="Процентная ставка"
-					unit="%"
-					value={input.annualRate}
-					onChange={(value) => patch({ annualRate: value })}
-					decimal
-					min={0}
-					max={100}
-					error={issues.get("annualRate")}
-				/>
-				<fieldset className="flex flex-wrap gap-2" aria-label="Примеры ставок">
-					{presets.map((preset) => (
-						<Button
-							key={preset.id}
-							type="button"
-							variant={
-								input.annualRate === preset.rate ? "secondary" : "outline"
-							}
-							className="h-11"
-							onClick={() => patch({ annualRate: preset.rate })}
-							aria-label={`Применить пример: ${preset.name}, ${preset.rate} процентов`}
-						>
-							{preset.name} · {preset.rate} %
-						</Button>
-					))}
-				</fieldset>
-				<div className="flex flex-col items-start gap-1">
-					<FieldDescription>
-						Примеры для расчёта. Ставку и условия уточняйте в банке.
-					</FieldDescription>
-					<Dialog>
-						<DialogTrigger asChild>
-							<Button type="button" variant="link" className="h-11 px-0">
-								Изменить ставки
-							</Button>
-						</DialogTrigger>
-						<DialogContent className="max-h-[90dvh] overflow-y-auto">
-							<DialogHeader>
-								<DialogTitle>Примеры ставок</DialogTitle>
-								<DialogDescription>
-									Задайте свои значения. Изменения сохраняются сразу; ставка
-									текущего расчёта выбирается отдельно.
-								</DialogDescription>
-							</DialogHeader>
-							<FieldGroup className="gap-4">
-								{presets.map((preset) => (
-									<NumberField
-										key={preset.id}
-										id={`rate-preset-${preset.id}`}
-										label={preset.name}
-										value={preset.rate}
-										onChange={(value) => {
-											if (value >= 0 && value <= 100)
-												updateRate(preset.id, value);
-										}}
-										decimal
-										min={0}
-										max={100}
-										unit="%"
-										hint="От 0 до 100 % годовых"
-									/>
-								))}
-							</FieldGroup>
-							<DialogFooter>
-								<DialogClose asChild>
-									<Button type="button" className="h-11">
-										Готово
-									</Button>
-								</DialogClose>
-							</DialogFooter>
-						</DialogContent>
-					</Dialog>
-				</div>
-			</FieldGroup>
+			<NumberField
+				id="annual-rate"
+				label="Процентная ставка"
+				unit="%"
+				value={input.annualRate}
+				onChange={(value) => patch({ annualRate: value })}
+				decimal
+				min={0}
+				max={100}
+				error={issues.get("annualRate")}
+			/>
 
 			<StartMonthField error={issues.get("startDate")} />
 
