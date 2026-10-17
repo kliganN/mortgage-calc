@@ -58,7 +58,7 @@
 	--card-foreground: #0f1f17;
 	--popover: #ffffff;
 	--popover-foreground: #0f1f17;
-	--primary: #059669;
+	--primary: #047857;
 	--primary-foreground: #f0fdf7;
 	--secondary: #e7f2ec;
 	--secondary-foreground: #14532d;
@@ -71,11 +71,11 @@
 	--input: #d5e3db;
 	--ring: #0a9e75;
 	--chart-1: #059669;
-	--chart-2: #e85d4a;
+	--chart-2: #c94a3a;
 	--chart-3: #0d9488;
 	--chart-4: #d97706;
 	--chart-5: #64748b;
-	--radius: 0.625rem;
+	--radius: 0.75rem;
 	--sidebar: #f2f7f3;
 	--sidebar-foreground: #0f1f17;
 	--sidebar-primary: #059669;
@@ -94,6 +94,8 @@
 		@apply bg-background text-foreground;
 	}
 	html {
+		scroll-padding-top: 6rem;
+		scroll-padding-bottom: 6rem;
 		@apply font-sans;
 	}
 	::selection {
@@ -101,74 +103,48 @@
 	}
 }
 
-/* Липкие шапка и футер таблицы внутри скролл-контейнера .sticky-table */
-.sticky-table [data-slot="table-head"] {
-	position: sticky;
-	top: 0;
-	z-index: 1;
-	background: var(--card);
-}
-
-.sticky-table [data-slot="table-footer"] {
-	position: sticky;
-	bottom: 0;
-	z-index: 1;
-	background: var(--card);
-}
-
-/* ─────────────────────────────────────────────────────────────────────────
-   «Жидкое стекло» капли навбара (в духе iOS 26).
-   Слои, сверху вниз: верхний блик ::after, полупрозрачное «стекло»
-   с насыщенной просветкой фона, кромка и внутренние тени-блики.
-   Преломление фона (feDisplacementMap) подключается только там, где
-   backdrop-filter понимает url(…): Chromium — да, Safari/Firefox —
-   получают аккуратный blur без искажения.
-   ───────────────────────────────────────────────────────────────────────── */
-.glass-pill {
-	position: absolute;
-	border: 1px solid rgb(255 255 255 / 0.55);
-	background: linear-gradient(
-		180deg,
-		rgb(255 255 255 / 0.38),
-		rgb(255 255 255 / 0.12) 55%,
-		rgb(255 255 255 / 0.2)
-	);
-	box-shadow:
-		inset 0 1px 1px rgb(255 255 255 / 0.85),
-		inset 0 -1px 2px rgb(15 31 23 / 0.07),
-		0 1px 2px rgb(15 31 23 / 0.06),
-		0 4px 12px rgb(15 31 23 / 0.08);
-	-webkit-backdrop-filter: blur(4px) saturate(160%);
-	backdrop-filter: blur(4px) saturate(160%);
-}
-
-/* Спекулярный блик по верхней кромке капли */
-.glass-pill::after {
-	content: "";
-	position: absolute;
-	right: 1px;
-	left: 1px;
-	top: 1px;
-	height: 45%;
-	border-radius: 999px;
-	background: linear-gradient(
-		180deg,
-		rgb(255 255 255 / 0.55),
-		rgb(255 255 255 / 0)
-	);
-	pointer-events: none;
-}
-
-@supports (backdrop-filter: url(#f)) {
-	.glass-pill {
-		-webkit-backdrop-filter: url(#nav-glass-distortion) blur(4px) saturate(160%);
-		backdrop-filter: url(#nav-glass-distortion) blur(4px) saturate(160%);
+/* Доступные состояния интерактивных элементов и единая геометрия приложения. */
+@layer base {
+	button:not(:disabled),
+	[role="button"]:not(:disabled),
+	select,
+	summary {
+		cursor: pointer;
+	}
+	a:focus-visible,
+	button:focus-visible,
+	summary:focus-visible,
+	select:focus-visible {
+		outline: 2px solid var(--ring);
+		outline-offset: 3px;
+	}
+	[id] {
+		scroll-margin-top: 6rem;
 	}
 }
 
-/* Печатная версия отчёта: поля страницы и светлые цвета без экранных тем. */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms;
+		transition-duration: 0.01ms;
+		scroll-behavior: auto;
+	}
+}
+
+/* При печати отчёт использует всю ширину листа и повторяет шапку таблицы. */
 @media print {
 	@page {
 		margin: 12mm;
+	}
+	thead {
+		display: table-header-group;
+	}
+	tr {
+		break-inside: avoid;
+	}
+	body {
+		background: white;
 	}
 }

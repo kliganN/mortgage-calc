@@ -86,7 +86,7 @@ export function CompareView({ currentInput }: CompareViewProps) {
 				<CardContent>
 					<Button
 						variant="outline"
-						size="sm"
+						className="h-11"
 						onClick={() => add(scenarioLabel(currentInput), currentInput)}
 					>
 						<Plus /> Добавить текущий сценарий
@@ -98,23 +98,23 @@ export function CompareView({ currentInput }: CompareViewProps) {
 
 	return (
 		<Card>
-			<CardHeader className="flex flex-row items-start justify-between space-y-0">
+			<CardHeader className="flex flex-row flex-wrap items-start justify-between gap-4">
 				<div className="space-y-1.5">
 					<CardTitle>Сравнение сценариев</CardTitle>
 					<CardDescription>
 						Экономия считается относительно текущего сценария
 					</CardDescription>
 				</div>
-				<div className="flex gap-2">
+				<div className="flex flex-wrap gap-2">
 					<Button
 						variant="outline"
-						size="sm"
+						className="h-11"
 						disabled={scenarios.length >= 3}
 						onClick={() => add(scenarioLabel(currentInput), currentInput)}
 					>
 						<Plus /> Добавить
 					</Button>
-					<Button variant="ghost" size="sm" onClick={clear}>
+					<Button variant="ghost" className="h-11" onClick={clear}>
 						Очистить
 					</Button>
 				</div>
@@ -140,7 +140,7 @@ export function CompareView({ currentInput }: CompareViewProps) {
 													type="button"
 													onClick={() => remove(s.id)}
 													aria-label={`Убрать сценарий ${s.label}`}
-													className="ml-1 text-muted-foreground hover:text-destructive"
+													className="ml-1 flex size-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-destructive"
 												>
 													<X className="size-3.5" />
 												</button>
@@ -153,9 +153,9 @@ export function CompareView({ currentInput }: CompareViewProps) {
 						<TableBody>
 							<MetricRow
 								ids={schedules.map((s) => s.id)}
-								label="Ежемесячный платёж"
+								label="Первый плановый платёж"
 								values={schedules.map((s) =>
-									formatRub(s.schedule.currentPayment),
+									formatRub(s.schedule.initialPayment),
 								)}
 							/>
 							<MetricRow
@@ -215,16 +215,23 @@ export function CompareView({ currentInput }: CompareViewProps) {
 								/>
 								<XAxis
 									dataKey="month"
+									type="number"
+									domain={[0, "dataMax"]}
+									tickCount={6}
 									tick={{ fontSize: 11 }}
 									tickLine={false}
-									tickFormatter={(v: number) => `${Math.floor((v - 1) / 12)}`}
+									tickFormatter={(v: number) =>
+										`${Math.round((v / 12) * 10) / 10}`
+									}
 								/>
 								<YAxis
 									tick={{ fontSize: 11 }}
 									tickLine={false}
 									axisLine={false}
 									tickFormatter={(v: number) =>
-										`${Math.round(v / 1_000_000)} млн`
+										v >= 1_000_000
+											? `${Math.round(v / 100_000) / 10} млн`
+											: `${Math.round(v / 1000)} тыс.`
 									}
 									width={52}
 								/>
@@ -247,6 +254,7 @@ export function CompareView({ currentInput }: CompareViewProps) {
 										stroke={LINE_COLORS[i % LINE_COLORS.length]}
 										strokeWidth={2}
 										dot={false}
+										isAnimationActive={false}
 									/>
 								))}
 							</LineChart>

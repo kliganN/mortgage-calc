@@ -1,9 +1,24 @@
 import { useId, useState } from "react";
 import { NumberField } from "@/components/number-field";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+	Dialog,
+	DialogClose,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+	Field,
+	FieldDescription,
+	FieldError,
+	FieldGroup,
+	FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { PaymentType } from "@/lib/calc";
 import { plural } from "@/lib/format";
@@ -24,190 +39,231 @@ interface LoanFormProps {
 export function LoanForm({ issues }: LoanFormProps) {
 	const { input, patch } = useLoanStore();
 	const { presets, updateRate } = useRatePresetsStore();
-	const years = Math.round(input.termMonths / 12);
+	const [termUnit, setTermUnit] = useState("years");
 	const termId = useId();
+	const paymentTypeId = useId();
+	const inMonths = termUnit === "months";
+	const termHint = `${input.termMonths} ${plural(input.termMonths, ["месяц", "месяца", "месяцев"])} · от 1 до 30 лет`;
+	const termError = issues.get("termMonths");
 
-	// Срок ограничен 1–30 годами (правило пользователя): слайдер и поле ввода.
-	const setYears = (y: number) =>
-		patch({ termMonths: Math.max(MIN_YEARS, Math.min(MAX_YEARS, y)) * 12 });
+	// Срок ограничен 1–30 годами; месяцы сохраняются точно, в том числе после импорта.
+	const setTerm = (value: number) =>
+		patch({ termMonths: Math.round(inMonths ? value : value * 12) });
 	const setDownShare = (share: number) =>
 		patch({ downPayment: Math.round((input.propertyPrice * share) / 100) });
 
 	return (
-		<div className="space-y-6">
-			<div className="flex flex-wrap items-center gap-2">
-				<span className="text-sm text-muted-foreground">Пресеты ставок:</span>
-				{presets.map((p) => (
-					<Badge
-						key={p.id}
-						variant={input.annualRate === p.rate ? "default" : "outline"}
-						className="cursor-pointer select-none"
-						onClick={() => patch({ annualRate: p.rate })}
-						onDoubleClick={() => {
-							const text = globalThis.prompt(
-								`Ставка «${p.name}», % годовых:`,
-								String(p.rate),
-							);
-							const n = text === null ? null : Number(text.replace(",", "."));
-							if (n !== null && Number.isFinite(n) && n >= 0 && n <= 100)
-								updateRate(p.id, n);
-						}}
-						title="Клик — применить ставку, двойной клик — изменить ставку пресета"
-					>
-						{p.name} · {p.rate} %
-					</Badge>
-				))}
-			</div>
-
-			<div className="grid gap-4 sm:grid-cols-2">
+		<FieldGroup className="gap-6">
+			<NumberField
+				id="property-price"
+				label="Стоимость жилья"
+				unit="₽"
+				value={input.propertyPrice}
+				onChange={(value) => patch({ propertyPrice: value })}
+				min={100_000}
+				error={issues.get("propertyPrice")}
+			/>
+			<FieldGroup className="gap-2">
 				<NumberField
-					id="property-price"
-					label="Стоимость жилья"
+					id="down-payment"
+					label="Первоначальный взнос"
 					unit="₽"
-					value={input.propertyPrice}
-					onChange={(v) => patch({ propertyPrice: v })}
-					min={100_000}
-					error={issues.get("propertyPrice")}
+					value={input.downPayment}
+					onChange={(value) => patch({ downPayment: value })}
+					min={0}
+					hint={`${Math.round((input.downPayment / Math.max(1, input.propertyPrice)) * 100)} % от стоимости жилья`}
+					error={issues.get("downPayment")}
 				/>
-				<div className="space-y-2">
-					<NumberField
-						id="down-payment"
-						label="Первоначальный взнос"
-						unit="₽"
-						value={input.downPayment}
-						onChange={(v) => patch({ downPayment: v })}
-						min={0}
-						hint={`${Math.round((input.downPayment / Math.max(1, input.propertyPrice)) * 100)} % от стоимости`}
-						error={issues.get("downPayment")}
-					/>
-					<div className="flex gap-1.5">
-						{DOWN_PAYMENT_SHARES.map((share) => (
-							<button
-								key={share}
-								type="button"
-								onClick={() => setDownShare(share)}
-								className="rounded-md border px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-							>
-								{share} %
-							</button>
-						))}
+				<div className="flex flex-wrap gap-2">
+					{DOWN_PAYMENT_SHARES.map((share) => (
+						<Button
+							key={share}
+							type="button"
+							variant="outline"
+							className="h-11 flex-1"
+							onClick={() => setDownShare(share)}
+							aria-label={`Первоначальный взнос ${share} процентов`}
+						>
+							{share} %
+						</Button>
+					))}
+				</div>
+			</FieldGroup>
+
+			<FieldGroup className="gap-3">
+				<div className="flex items-end gap-3">
+					<div className="min-w-0 flex-1">
+						<NumberField
+							key={termUnit}
+							id={termId}
+							label="Срок кредита"
+							value={inMonths ? input.termMonths : input.termMonths / 12}
+							onChange={setTerm}
+							decimal={!inMonths}
+							min={inMonths ? MIN_YEARS * 12 : MIN_YEARS}
+							max={inMonths ? MAX_YEARS * 12 : MAX_YEARS}
+							unit={inMonths ? "мес." : "лет"}
+							error={termError}
+						/>
 					</div>
+					<ToggleGroup
+						type="single"
+						variant="outline"
+						value={termUnit}
+						onValueChange={(value) => value && setTermUnit(value)}
+						aria-label="Единицы срока кредита"
+						className="shrink-0 self-start pt-6"
+					>
+						<ToggleGroupItem value="years" className="h-11 px-3">
+							Лет
+						</ToggleGroupItem>
+						<ToggleGroupItem value="months" className="h-11 px-3">
+							Мес.
+						</ToggleGroupItem>
+					</ToggleGroup>
 				</div>
-			</div>
+				<input
+					type="range"
+					min={MIN_YEARS * 12}
+					max={MAX_YEARS * 12}
+					step={1}
+					value={input.termMonths}
+					onChange={(event) =>
+						patch({ termMonths: Number(event.target.value) })
+					}
+					aria-label="Срок кредита в месяцах"
+					aria-valuetext={termHint}
+					aria-describedby={`${termId}-summary`}
+					className="h-6 w-full cursor-pointer accent-primary"
+				/>
+				<FieldDescription id={`${termId}-summary`}>{termHint}</FieldDescription>
+			</FieldGroup>
 
-			<div className="space-y-2">
-				<Label htmlFor={termId}>Срок кредита</Label>
-				<div className="flex items-center gap-4">
-					<Slider
-						id={termId}
-						min={MIN_YEARS * 12}
-						max={MAX_YEARS * 12}
-						step={12}
-						value={[
-							Math.max(
-								MIN_YEARS * 12,
-								Math.min(
-									MAX_YEARS * 12,
-									Math.round(input.termMonths / 12) * 12,
-								),
-							),
-						]}
-						onValueChange={([v]) => patch({ termMonths: v })}
-						className="flex-1"
-						aria-label="Срок кредита в месяцах"
-					/>
-					<TermYearsInput years={years} onCommit={setYears} />
-					<span className="text-sm text-muted-foreground">
-						{years} {plural(years, ["год", "года", "лет"])}
-					</span>
-				</div>
-				{issues.get("termMonths") && (
-					<p className="text-xs text-destructive">{issues.get("termMonths")}</p>
-				)}
-			</div>
-
-			<div className="grid gap-4 sm:grid-cols-2">
+			<FieldGroup className="gap-3">
 				<NumberField
 					id="annual-rate"
-					label="Ставка"
+					label="Процентная ставка"
 					unit="%"
 					value={input.annualRate}
-					onChange={(v) => patch({ annualRate: v })}
+					onChange={(value) => patch({ annualRate: value })}
 					decimal
 					min={0}
 					max={100}
 					error={issues.get("annualRate")}
 				/>
-				<StartMonthField />
-			</div>
+				<fieldset className="flex flex-wrap gap-2" aria-label="Примеры ставок">
+					{presets.map((preset) => (
+						<Button
+							key={preset.id}
+							type="button"
+							variant={
+								input.annualRate === preset.rate ? "secondary" : "outline"
+							}
+							className="h-11"
+							onClick={() => patch({ annualRate: preset.rate })}
+							aria-label={`Применить пример: ${preset.name}, ${preset.rate} процентов`}
+						>
+							{preset.name} · {preset.rate} %
+						</Button>
+					))}
+				</fieldset>
+				<div className="flex flex-col items-start gap-1">
+					<FieldDescription>
+						Примеры для расчёта. Ставку и условия уточняйте в банке.
+					</FieldDescription>
+					<Dialog>
+						<DialogTrigger asChild>
+							<Button type="button" variant="link" className="h-11 px-0">
+								Изменить ставки
+							</Button>
+						</DialogTrigger>
+						<DialogContent className="max-h-[90dvh] overflow-y-auto">
+							<DialogHeader>
+								<DialogTitle>Примеры ставок</DialogTitle>
+								<DialogDescription>
+									Задайте свои значения. Изменения сохраняются сразу; ставка
+									текущего расчёта выбирается отдельно.
+								</DialogDescription>
+							</DialogHeader>
+							<FieldGroup className="gap-4">
+								{presets.map((preset) => (
+									<NumberField
+										key={preset.id}
+										id={`rate-preset-${preset.id}`}
+										label={preset.name}
+										value={preset.rate}
+										onChange={(value) => {
+											if (value >= 0 && value <= 100)
+												updateRate(preset.id, value);
+										}}
+										decimal
+										min={0}
+										max={100}
+										unit="%"
+										hint="От 0 до 100 % годовых"
+									/>
+								))}
+							</FieldGroup>
+							<DialogFooter>
+								<DialogClose asChild>
+									<Button type="button" className="h-11">
+										Готово
+									</Button>
+								</DialogClose>
+							</DialogFooter>
+						</DialogContent>
+					</Dialog>
+				</div>
+			</FieldGroup>
 
-			<div className="space-y-2">
-				<Label htmlFor="payment-type">Тип платежей</Label>
+			<StartMonthField error={issues.get("startDate")} />
+
+			<Field data-invalid={Boolean(issues.get("paymentType"))}>
+				<FieldLabel id={paymentTypeId}>Тип платежей</FieldLabel>
 				<ToggleGroup
 					type="single"
 					variant="outline"
 					value={input.paymentType}
-					onValueChange={(v) => v && patch({ paymentType: v as PaymentType })}
-					className="w-full"
+					onValueChange={(value) =>
+						value && patch({ paymentType: value as PaymentType })
+					}
+					className="w-full flex-wrap"
+					aria-labelledby={paymentTypeId}
+					aria-describedby={`${paymentTypeId}-hint`}
 				>
-					<ToggleGroupItem value="annuity" className="flex-1">
-						Аннуитетные
+					<ToggleGroupItem value="annuity" className="h-11 flex-1 px-3">
+						Равные
 					</ToggleGroupItem>
-					<ToggleGroupItem value="differentiated" className="flex-1">
-						Дифференцированные
+					<ToggleGroupItem value="differentiated" className="h-11 flex-1 px-3">
+						Убывающие
 					</ToggleGroupItem>
 				</ToggleGroup>
-			</div>
-		</div>
+				<FieldDescription id={`${paymentTypeId}-hint`}>
+					{input.paymentType === "annuity"
+						? "Аннуитетные: одинаковый платёж каждый месяц."
+						: "Дифференцированные: платёж выше в начале и уменьшается со временем."}
+				</FieldDescription>
+			</Field>
+		</FieldGroup>
 	);
 }
 
-/** Месяц первого платежа: нативный input[type=date], хранится как ISO-строка. */
-function StartMonthField() {
+/** Дата первого платежа хранится как ISO-строка; ошибка приходит из общей валидации. */
+function StartMonthField({ error }: { error?: string }) {
 	const { input, patch } = useLoanStore();
-	const valid = /^\d{4}-\d{2}-\d{2}$/.test(input.startDate);
 	return (
-		<div className="space-y-2">
-			<Label htmlFor="start-date">Дата первого платежа</Label>
+		<Field data-invalid={Boolean(error)}>
+			<FieldLabel htmlFor="start-date">Дата первого платежа</FieldLabel>
 			<Input
 				id="start-date"
 				type="date"
 				value={input.startDate}
-				onChange={(e) => e.target.value && patch({ startDate: e.target.value })}
+				onChange={(event) => patch({ startDate: event.target.value })}
+				aria-invalid={Boolean(error)}
+				aria-describedby={error ? "start-date-error" : undefined}
+				className="h-11 min-w-0"
 			/>
-			{!valid && (
-				<p className="text-xs text-destructive">Укажите корректную дату</p>
-			)}
-		</div>
-	);
-}
-
-/**
- * Поле «лет» для срока кредита: черновик во время ввода — значение можно
- * стереть полностью и ввести заново; прижимание к 1–30 происходит на blur,
- * чтобы промежуточный ввод («2» из «20») не прыгал к границам.
- */
-function TermYearsInput({
-	years,
-	onCommit,
-}: {
-	years: number;
-	onCommit: (years: number) => void;
-}) {
-	const [draft, setDraft] = useState<string | null>(null);
-
-	return (
-		<Input
-			inputMode="numeric"
-			value={draft ?? String(years)}
-			onChange={(e) => setDraft(e.target.value.replace(/\D/g, "").slice(0, 2))}
-			onBlur={() => {
-				const n = Number.parseInt(draft ?? "", 10);
-				if (Number.isFinite(n)) onCommit(n);
-				setDraft(null);
-			}}
-			aria-label="Срок кредита в годах"
-			className="w-20"
-		/>
+			{error && <FieldError id="start-date-error">{error}</FieldError>}
+		</Field>
 	);
 }

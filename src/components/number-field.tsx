@@ -1,7 +1,12 @@
 import { cn } from "cn";
 import { useRef, useState } from "react";
+import {
+	Field,
+	FieldDescription,
+	FieldError,
+	FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 interface NumberFieldProps {
 	id: string;
@@ -17,6 +22,7 @@ interface NumberFieldProps {
 	/** Прижимаются к значению при потере фокуса, не во время ввода. */
 	min?: number;
 	max?: number;
+	disabled?: boolean;
 }
 
 /** Разбирает готовый текст в число: пробелы-разделители, запятая как десятичный разделитель. */
@@ -95,6 +101,7 @@ export function NumberField({
 	decimal = false,
 	min,
 	max,
+	disabled = false,
 }: NumberFieldProps) {
 	// null — показываем форматированное значение из стора.
 	const [draft, setDraft] = useState<string | null>(null);
@@ -112,11 +119,19 @@ export function NumberField({
 		new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(value);
 
 	return (
-		<div className="space-y-2">
-			<Label htmlFor={id}>{label}</Label>
+		<Field
+			className="min-w-0 gap-2"
+			data-invalid={Boolean(error)}
+			data-disabled={disabled}
+		>
+			<FieldLabel htmlFor={id}>{label}</FieldLabel>
 			<div className="relative">
 				<Input
 					id={id}
+					name={id}
+					autoComplete="off"
+					spellCheck={false}
+					disabled={disabled}
 					ref={inputRef}
 					inputMode={decimal ? "decimal" : "numeric"}
 					value={display}
@@ -145,7 +160,13 @@ export function NumberField({
 						});
 					}}
 					aria-invalid={Boolean(error)}
-					className={cn("pr-12", error && "border-destructive")}
+					aria-describedby={
+						error ? `${id}-error` : hint ? `${id}-hint` : undefined
+					}
+					className={cn(
+						"h-11 pr-12 tabular-nums",
+						error && "border-destructive",
+					)}
 				/>
 				{unit && (
 					<span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-sm text-muted-foreground">
@@ -154,10 +175,10 @@ export function NumberField({
 				)}
 			</div>
 			{error ? (
-				<p className="text-xs text-destructive">{error}</p>
+				<FieldError id={`${id}-error`}>{error}</FieldError>
 			) : hint ? (
-				<p className="text-xs text-muted-foreground">{hint}</p>
+				<FieldDescription id={`${id}-hint`}>{hint}</FieldDescription>
 			) : null}
-		</div>
+		</Field>
 	);
 }

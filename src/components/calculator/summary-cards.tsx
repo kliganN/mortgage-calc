@@ -1,95 +1,110 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import type { ScheduleResult } from "@/lib/calc";
-import { formatRub, formatTerm } from "@/lib/format";
+import { ArrowDownRight, CalendarCheck, Wallet } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { LoanInput, ScheduleResult } from "@/lib/calc";
+import {
+	formatMonthYear,
+	formatRub,
+	formatRubPrecise,
+	formatTerm,
+} from "@/lib/format";
 
 interface SummaryCardsProps {
 	schedule: ScheduleResult;
+	input: LoanInput;
+	baseline: ScheduleResult;
 }
 
-/** Ключевые цифры кредита: платёж, переплата, общая выплата, срок. */
-export function SummaryCards({ schedule }: SummaryCardsProps) {
+/** Ключевой результат отделён от итоговой суммы; первый платёж не выдаётся за будущий. */
+export function SummaryCards({ schedule, input, baseline }: SummaryCardsProps) {
 	const noLoan = schedule.loanAmount <= 0;
-
+	const hasExtra = schedule.totalExtraPaid > 0;
+	const last = schedule.rows.at(-1);
+	const saved = baseline.totalInterest - schedule.totalInterest;
+	const monthsSaved =
+		baseline.effectiveTermMonths - schedule.effectiveTermMonths;
+	const changing =
+		input.paymentType === "differentiated" ||
+		schedule.initialPayment !== schedule.currentPayment;
 	return (
-		<div className="space-y-3">
-			<Card className="border-primary/25 bg-primary/5">
-				<CardContent className="space-y-1">
-					<p className="text-sm text-muted-foreground">
-						{schedule.effectiveTermMonths > 0 ? "Ежемесячный платёж" : "—"}
+		<Card className="overflow-hidden border-primary/20 bg-card shadow-sm">
+			<CardHeader className="gap-2 pb-0">
+				<CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+					<Wallet className="size-4" aria-hidden />
+					{changing ? "Первый платёж" : "Ежемесячный платёж"}
+				</CardTitle>
+			</CardHeader>
+			<CardContent className="flex flex-col gap-5">
+				<div role="status" aria-label="Результат расчёта">
+					<p
+						className="text-4xl font-semibold tracking-tight text-primary tabular-nums sm:text-5xl"
+						title={formatRubPrecise(schedule.initialPayment)}
+					>
+						{noLoan ? "Без кредита" : formatRub(schedule.initialPayment)}
+						<span className="ml-2 text-sm font-normal text-muted-foreground">
+							{!noLoan && "/ месяц"}
+						</span>
 					</p>
-					<p className="text-3xl font-bold tabular-nums tracking-tight">
-						{noLoan ? "— " : formatRub(schedule.currentPayment)}
+					{changing && !noLoan && (
+						<p className="mt-2 text-sm text-muted-foreground">
+							{input.paymentType === "differentiated"
+								? `Снижается до ${formatRub(schedule.finalPayment)} к последнему месяцу`
+								: `Плановый платёж к концу графика — ${formatRub(schedule.currentPayment)} / месяц`}
+						</p>
+					)}
+					{input.recurringExtra && input.recurringExtra.amount > 0 && (
+						<p className="mt-2 text-sm text-muted-foreground">
+							Дополнительно {formatRub(input.recurringExtra.amount * 100)} с
+							месяца {input.recurringExtra.startMonthIndex}
+						</p>
+					)}
+				</div>
+				<dl className="grid grid-cols-2 gap-x-4 gap-y-5 border-t pt-5 sm:grid-cols-3">
+					<Metric
+						label="Сумма кредита"
+						value={formatRub(schedule.loanAmount)}
+					/>
+					<Metric
+						label="Переплата процентами"
+						value={formatRub(schedule.totalInterest)}
+					/>
+					<Metric label="Всего банку" value={formatRub(schedule.totalPaid)} />
+				</dl>
+				{last && (
+					<p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+						<CalendarCheck className="size-4" aria-hidden />
+						Погашение —{" "}
+						<span className="font-medium text-foreground">
+							{formatMonthYear(last.date)}
+						</span>
+						<span>· {formatTerm(schedule.effectiveTermMonths)}</span>
 					</p>
-					<p className="text-xs text-muted-foreground">
-						{!noLoan && schedule.initialPayment !== schedule.currentPayment
-							? `первый платёж — ${formatRub(schedule.initialPayment)}`
-							: " \u00A0"}
-					</p>
-				</CardContent>
-			</Card>
-
-			<div className="grid grid-cols-2 gap-3">
-				<MetricCard
-					label="Переплата (проценты)"
-					value={noLoan ? "—" : formatRub(schedule.totalInterest)}
-					sub={
-						noLoan
-							? " "
-							: `${Math.round((schedule.totalInterest / schedule.loanAmount) * 100)} % от суммы кредита`
-					}
-				/>
-				<MetricCard
-					label="Общая выплата"
-					value={noLoan ? "—" : formatRub(schedule.totalPaid)}
-					sub={noLoan ? " " : `кредит ${formatRub(schedule.loanAmount)}`}
-				/>
-				<MetricCard
-					label="Срок с учётом досрочных"
-					value={noLoan ? "—" : formatTerm(schedule.effectiveTermMonths)}
-					sub={noLoan ? " " : `${schedule.effectiveTermMonths} платежей`}
-				/>
-				<MetricCard
-					label="Досрочные платежи"
-					value={
-						noLoan
-							? "—"
-							: schedule.totalExtraPaid > 0
-								? formatRub(schedule.totalExtraPaid)
-								: "нет"
-					}
-					sub={
-						noLoan
-							? " "
-							: schedule.totalExtraPaid > 0
-								? "включены в график"
-								: " \u00A0"
-					}
-				/>
-			</div>
-			<Separator />
-		</div>
+				)}
+				{hasExtra && (
+					<div className="rounded-xl bg-secondary p-4 text-secondary-foreground">
+						<p className="flex items-center gap-2 font-medium">
+							<ArrowDownRight className="size-4" aria-hidden />
+							Экономия от досрочных — {formatRub(saved)}
+						</p>
+						<p className="mt-1 text-sm">
+							{monthsSaved > 0
+								? `Кредит закроется на ${formatTerm(monthsSaved)} раньше.`
+								: "Снижается ежемесячная нагрузка."}{" "}
+							По сравнению с тем же кредитом без досрочных.
+						</p>
+					</div>
+				)}
+			</CardContent>
+		</Card>
 	);
 }
 
-function MetricCard({
-	label,
-	value,
-	sub,
-}: {
-	label: string;
-	value: string;
-	sub: string;
-}) {
+function Metric({ label, value }: { label: string; value: string }) {
 	return (
-		<Card>
-			<CardContent className="space-y-1">
-				<p className="text-xs text-muted-foreground">{label}</p>
-				<p className="text-lg font-semibold tabular-nums tracking-tight">
-					{value}
-				</p>
-				<p className="text-xs text-muted-foreground">{sub}</p>
-			</CardContent>
-		</Card>
+		<div>
+			<dt className="text-xs leading-relaxed text-muted-foreground">{label}</dt>
+			<dd className="mt-1 text-base font-semibold tabular-nums sm:text-lg">
+				{value}
+			</dd>
+		</div>
 	);
 }

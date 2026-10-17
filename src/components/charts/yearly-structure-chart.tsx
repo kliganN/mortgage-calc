@@ -80,10 +80,15 @@ export function YearlyStructureChart({ schedule }: YearlyStructureChartProps) {
 					variant="outline"
 					size="sm"
 					value={granularity}
+					aria-label="Период группировки платежей"
 					onValueChange={(v) => v && setGranularity(v as Granularity)}
 				>
-					<ToggleGroupItem value="years">По годам</ToggleGroupItem>
-					<ToggleGroupItem value="months">По месяцам</ToggleGroupItem>
+					<ToggleGroupItem value="years" className="h-11">
+						По годам
+					</ToggleGroupItem>
+					<ToggleGroupItem value="months" className="h-11">
+						По месяцам
+					</ToggleGroupItem>
 				</ToggleGroup>
 			</div>
 			<div className="h-80">

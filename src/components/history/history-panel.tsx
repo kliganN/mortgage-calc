@@ -1,4 +1,4 @@
-import { Copy, Link2, Save, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,28 +8,13 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import { scenarioLabel } from "@/lib/scenario-label";
-import { buildShareUrl } from "@/lib/url";
 import { useHistoryStore } from "@/store/history";
 import { useLoanStore } from "@/store/loan";
 
-/** История расчётов: сохранить, скопировать ссылку, вернуться к сохранённому. */
+/** Сохранённые расчёты: загрузка параметров и управление историей. */
 export function HistoryPanel() {
-	const input = useLoanStore((s) => s.input);
 	const patch = useLoanStore((s) => s.patch);
-	const { entries, save, remove, clear } = useHistoryStore();
-
-	const copyLink = async () => {
-		const url = buildShareUrl(input);
-		try {
-			await navigator.clipboard.writeText(url);
-			toast.success("Ссылка скопирована", {
-				description: "Расчёт закодирован в параметр ?s=",
-			});
-		} catch {
-			toast.error("Не удалось скопировать", { description: url });
-		}
-	};
+	const { entries, remove, clear } = useHistoryStore();
 
 	return (
 		<Card>
@@ -40,32 +25,10 @@ export function HistoryPanel() {
 				</CardDescription>
 			</CardHeader>
 			<CardContent className="space-y-3">
-				<div className="flex gap-2">
-					<Button
-						variant="outline"
-						size="sm"
-						className="flex-1"
-						onClick={() => {
-							save(scenarioLabel(input), input);
-							toast.success("Сценарий сохранён");
-						}}
-					>
-						<Save /> Сохранить
-					</Button>
-					<Button
-						variant="outline"
-						size="sm"
-						className="flex-1"
-						onClick={copyLink}
-					>
-						<Link2 /> Ссылка
-					</Button>
-				</div>
-
 				{entries.length === 0 ? (
 					<p className="text-sm text-muted-foreground">
-						Пока пусто — нажмите «Сохранить», чтобы зафиксировать текущие
-						параметры.
+						Здесь появятся сохранённые расчёты. Нажмите «Сохранить» над
+						калькулятором, чтобы добавить текущие условия.
 					</p>
 				) : (
 					<ul className="space-y-1.5">
@@ -98,17 +61,8 @@ export function HistoryPanel() {
 								<Button
 									variant="ghost"
 									size="icon"
-									aria-label={`Загрузить ${entry.label}`}
-									className="size-7"
-									onClick={() => patch(entry.input)}
-								>
-									<Copy />
-								</Button>
-								<Button
-									variant="ghost"
-									size="icon"
 									aria-label={`Удалить ${entry.label}`}
-									className="size-7 text-muted-foreground hover:text-destructive"
+									className="size-11 text-muted-foreground hover:text-destructive"
 									onClick={() => remove(entry.id)}
 								>
 									<Trash2 />
@@ -119,7 +73,12 @@ export function HistoryPanel() {
 				)}
 
 				{entries.length > 1 && (
-					<Button variant="ghost" size="sm" className="w-full" onClick={clear}>
+					<Button
+						variant="ghost"
+						size="sm"
+						className="h-11 w-full"
+						onClick={clear}
+					>
 						Очистить историю
 					</Button>
 				)}

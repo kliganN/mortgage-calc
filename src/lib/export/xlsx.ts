@@ -1,6 +1,6 @@
 import type { LoanInput, ScheduleResult } from "@/lib/calc";
 import { toRubles } from "@/lib/calc";
-import { formatDate } from "@/lib/format";
+import { formatDate, localISODate } from "@/lib/format";
 
 const MONEY = "#,##0.00";
 
@@ -37,11 +37,16 @@ export async function exportScheduleToXlsx(
 		["Ставка, % годовых", input.annualRate],
 		["Тип платежей", PAYMENT_TYPE_LABELS[input.paymentType]],
 		["Дата первого платежа", formatDate(input.startDate)],
-		["Ежемесячный платёж, ₽", toRubles(schedule.currentPayment)],
+		["Первый плановый платёж, ₽", toRubles(schedule.initialPayment)],
 		["Переплата (проценты), ₽", toRubles(schedule.totalInterest)],
 		["Общая выплата, ₽", toRubles(schedule.totalPaid)],
 		["Фактический срок, месяцев", schedule.effectiveTermMonths],
 	];
+	if (input.paymentType === "differentiated") {
+		rows.push(["Последний платёж, ₽", toRubles(schedule.finalPayment)]);
+	} else if (schedule.currentPayment !== schedule.initialPayment) {
+		rows.push(["Платёж после досрочных, ₽", toRubles(schedule.currentPayment)]);
+	}
 	for (const [label, value] of rows) {
 		const row = params.addRow([label, value]);
 		if (typeof value === "number") {
@@ -130,7 +135,7 @@ export async function exportScheduleToXlsx(
 	});
 	const url = URL.createObjectURL(blob);
 	const a = document.createElement("a");
-	const stamp = new Date().toISOString().slice(0, 10);
+	const stamp = localISODate();
 	a.href = url;
 	a.download = `ipoteka-grafik-${stamp}.xlsx`;
 	a.click();

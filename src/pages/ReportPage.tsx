@@ -1,6 +1,7 @@
 import { Printer } from "lucide-react";
-import { useMemo } from "react";
-import { useLocation } from "react-router";
+import { useEffect, useMemo } from "react";
+import { Link, useLocation } from "react-router";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
 	Table,
@@ -11,12 +12,14 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { buildSchedule, type LoanInput } from "@/lib/calc";
+import { buildSchedule, validateLoanInput } from "@/lib/calc";
 import {
 	formatDate,
 	formatMonthYear,
+	formatRate,
 	formatRubPrecise,
 	formatTerm,
+	localISODate,
 } from "@/lib/format";
 import { decodeLoanInput } from "@/lib/url";
 import { useLoanStore } from "@/store/loan";
@@ -24,34 +27,84 @@ import { useLoanStore } from "@/store/loan";
 /** Печатный отчёт: фиксированная светлая палитра, все строки графика. */
 export default function ReportPage() {
 	const storeInput = useLoanStore((s) => s.input);
+	const patch = useLoanStore((s) => s.patch);
 	const location = useLocation();
 
 	// Приоритет: параметры из ссылки (?s=…), иначе — текущее состояние калькулятора.
-	const input: LoanInput = useMemo(() => {
-		const restored = decodeLoanInput(
-			new URLSearchParams(location.search).get("s"),
-		);
-		return restored ?? storeInput;
-	}, [location.search, storeInput]);
+	const { restored, invalidLink } = useMemo(() => {
+		const params = new URLSearchParams(location.search);
+		const restored = decodeLoanInput(params.get("s"));
+		return {
+			restored,
+			invalidLink: params.has("s") && restored === null,
+		};
+	}, [location.search]);
+	const input = restored ?? storeInput;
 
-	const schedule = useMemo(() => buildSchedule(input), [input]);
+	// Переход из открытого по ссылке отчёта в калькулятор сохраняет этот расчёт.
+	useEffect(() => {
+		if (restored) patch(restored);
+	}, [restored, patch]);
+
+	const issues = useMemo(() => validateLoanInput(input), [input]);
+	const schedule = useMemo(
+		() => (invalidLink || issues.length > 0 ? null : buildSchedule(input)),
+		[input, invalidLink, issues.length],
+	);
+	const toolbar = (
+		<div className="mb-6 flex flex-wrap items-center justify-between gap-3 print:hidden">
+			<h1 className="text-xl font-semibold">Отчёт для печати</h1>
+			<Button
+				className="h-11"
+				disabled={schedule === null}
+				onClick={() => globalThis.print()}
+			>
+				<Printer data-icon="inline-start" /> Печать / Сохранить в PDF
+			</Button>
+		</div>
+	);
+
+	if (schedule === null) {
+		return (
+			<div className="mx-auto max-w-4xl">
+				{toolbar}
+				<Alert variant="destructive">
+					<AlertTitle>Не удалось сформировать отчёт</AlertTitle>
+					<AlertDescription>
+						{invalidLink ? (
+							<p>
+								Ссылка расчёта повреждена или содержит неподдерживаемые
+								параметры.
+							</p>
+						) : (
+							<ul className="list-inside list-disc">
+								{issues.map((issue) => (
+									<li key={`${issue.field}-${issue.message}`}>
+										{issue.message}
+									</li>
+								))}
+							</ul>
+						)}
+						<p>
+							<Link to="/calculator">Открыть калькулятор</Link> и проверить
+							параметры.
+						</p>
+					</AlertDescription>
+				</Alert>
+			</div>
+		);
+	}
 
 	return (
 		<div className="mx-auto max-w-4xl bg-white text-slate-900">
-			<div className="mb-6 flex items-center justify-between print:hidden">
-				<h1 className="text-xl font-semibold">Отчёт для печати</h1>
-				<Button onClick={() => globalThis.print()}>
-					<Printer /> Печать / Сохранить в PDF
-				</Button>
-			</div>
+			{toolbar}
 
 			<header className="mb-4 hidden print:block">
 				<p className="text-lg font-bold">
 					График платежей по ипотечному кредиту
 				</p>
 				<p className="text-xs text-slate-500">
-					Сформировано ипотечным калькулятором ·{" "}
-					{formatDate(new Date().toISOString().slice(0, 10))}
+					Сформировано ипотечным калькулятором · {formatDate(localISODate())}
 				</p>
 			</header>
 
@@ -68,7 +121,10 @@ export default function ReportPage() {
 					label="Первоначальный взнос"
 					value={formatRubPrecise(input.downPayment * 100)}
 				/>
-				<ReportMetric label="Ставка" value={`${input.annualRate} % годовых`} />
+				<ReportMetric
+					label="Ставка"
+					value={`${formatRate(input.annualRate)} годовых`}
+				/>
 				<ReportMetric
 					label="Тип платежей"
 					value={
@@ -82,8 +138,8 @@ export default function ReportPage() {
 					value={formatMonthYear(input.startDate)}
 				/>
 				<ReportMetric
-					label="Ежемесячный платёж"
-					value={formatRubPrecise(schedule.currentPayment)}
+					label="Первый плановый платёж"
+					value={formatRubPrecise(schedule.initialPayment)}
 					bold
 				/>
 				<ReportMetric

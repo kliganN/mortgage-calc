@@ -1,116 +1,64 @@
-import { useState } from "react";
-import {
-	Cell,
-	Legend,
-	Pie,
-	PieChart,
-	type PieSectorDataItem,
-	ResponsiveContainer,
-	Sector,
-} from "recharts";
-import { ChartCard } from "@/components/charts/chart-card";
+import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ScheduleResult } from "@/lib/calc";
 import { formatRub } from "@/lib/format";
 
-interface PayoutPieChartProps {
-	schedule: ScheduleResult;
-}
-
-interface Segment {
-	name: string;
-	value: number;
-	fill: string;
-}
-
-/** Активный сектор: чуть больше радиусом и с обводкой. */
-function activeSector(props: PieSectorDataItem) {
-	return (
-		<Sector
-			{...props}
-			outerRadius={(Number(props.outerRadius) || 100) + 8}
-			stroke="var(--background)"
-			strokeWidth={3}
-		/>
-	);
-}
-
-/** Структура выплат: интерактивный донат, в центре — выбранный сегмент или итог. */
-export function PayoutPieChart({ schedule }: PayoutPieChartProps) {
-	const [hovered, setHovered] = useState<number | null>(null);
-
-	const noLoan = schedule.loanAmount <= 0;
-	const data: Segment[] = [
-		{
-			name: "Тело кредита",
-			value: schedule.loanAmount / 100,
-			fill: "var(--chart-1)",
-		},
+/** Значения и доли доступны без наведения, в том числе с телефона и клавиатуры. */
+export function PayoutPieChart({ schedule }: { schedule: ScheduleResult }) {
+	if (schedule.loanAmount <= 0) return null;
+	const data = [
+		{ name: "Кредит", value: schedule.loanAmount, color: "var(--chart-1)" },
 		{
 			name: "Проценты",
-			value: schedule.totalInterest / 100,
-			fill: "var(--chart-2)",
+			value: schedule.totalInterest,
+			color: "var(--chart-2)",
 		},
 	];
-
-	if (noLoan) return null;
-
-	const total = schedule.loanAmount + schedule.totalInterest;
-	const active = hovered !== null ? data[hovered] : null;
-	const centerTitle = active ? active.name : "Всего выплачено";
-	const centerValue = active ? active.value : total / 100;
-	const centerShare = active
-		? `${Math.round((active.value / (total / 100)) * 100)} %`
-		: "";
-
 	return (
-		<ChartCard
-			title="Структура выплат"
-			description="Наведите на сектор или подпись, чтобы увидеть долю"
-		>
-			<div className="relative h-80">
-				<ResponsiveContainer width="100%" height="100%">
-					<PieChart>
-						<Pie
-							data={data}
-							dataKey="value"
-							nameKey="name"
-							innerRadius={68}
-							outerRadius={100}
-							paddingAngle={2}
-							stroke="var(--background)"
-							strokeWidth={2}
-							activeShape={activeSector}
-							onMouseEnter={(_, i) => setHovered(i)}
-							onMouseLeave={() => setHovered(null)}
-							// Без анимации: при переходе по маршруту контейнер меняет ширину,
-							// и анимация застывает, оставляя крошечный сектор.
-							isAnimationActive={false}
-						>
-							{data.map((entry) => (
-								<Cell key={entry.name} fill={entry.fill} />
-							))}
-						</Pie>
-						{/* Тултип не нужен: при наведении всю информацию показывает
-						    центр доната, а плашка тултипа накладывалась на него. */}
-						<Legend
-							formatter={(value) => (
-								<span className="text-sm">{String(value)}</span>
-							)}
-						/>
-					</PieChart>
-				</ResponsiveContainer>
-				<div className="pointer-events-none absolute inset-x-0 top-[38%] -translate-y-1/2 text-center">
-					<p className="text-xs text-muted-foreground">{centerTitle}</p>
-					<p className="text-xl font-bold tabular-nums tracking-tight">
-						{formatRub(centerValue * 100)}
-					</p>
-					{centerShare && (
-						<p className="text-xs text-muted-foreground">
-							{centerShare} от выплат
-						</p>
-					)}
+		<Card>
+			<CardHeader>
+				<CardTitle>Из чего складываются выплаты</CardTitle>
+			</CardHeader>
+			<CardContent className="flex flex-wrap items-center gap-5">
+				<div className="h-36 w-36 shrink-0" aria-hidden>
+					<ResponsiveContainer width="100%" height="100%">
+						<PieChart>
+							<Pie
+								data={data}
+								dataKey="value"
+								innerRadius={45}
+								outerRadius={65}
+								paddingAngle={2}
+								stroke="var(--card)"
+								isAnimationActive={false}
+							>
+								{data.map((part) => (
+									<Cell key={part.name} fill={part.color} />
+								))}
+							</Pie>
+						</PieChart>
+					</ResponsiveContainer>
 				</div>
-			</div>
-		</ChartCard>
+				<dl className="flex min-w-40 flex-1 flex-col gap-4">
+					{data.map((part) => (
+						<div key={part.name}>
+							<dt className="flex items-center gap-2 text-sm text-muted-foreground">
+								<span
+									className="size-2.5 rounded-full"
+									style={{ background: part.color }}
+								/>
+								{part.name}
+								<span className="ml-auto tabular-nums">
+									{Math.round((part.value / schedule.totalPaid) * 100)} %
+								</span>
+							</dt>
+							<dd className="mt-1 text-lg font-semibold wrap-break-word tabular-nums">
+								{formatRub(part.value)}
+							</dd>
+						</div>
+					))}
+				</dl>
+			</CardContent>
+		</Card>
 	);
 }
