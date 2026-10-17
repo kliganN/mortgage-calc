@@ -1,11 +1,13 @@
 import { Suspense } from "react";
 import { Link, Outlet } from "react-router";
 import { FloatingNavbar } from "@/components/floating-navbar";
+import { PageSeo } from "@/components/page-seo";
 import { Toaster } from "@/components/ui/sonner";
 
 export default function App() {
 	return (
 		<div className="flex min-h-screen flex-col bg-background text-foreground">
+			<PageSeo />
 			<a
 				href="#main-content"
 				className="sr-only fixed top-2 left-2 z-50 rounded-lg bg-card p-3 focus:not-sr-only"

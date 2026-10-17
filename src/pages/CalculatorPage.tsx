@@ -188,7 +188,9 @@ export default function CalculatorPage() {
 							<Input
 								id="share-url"
 								readOnly
-								value={buildShareUrl(input)}
+								value={
+									typeof window === "undefined" ? "" : buildShareUrl(input)
+								}
 								className="h-11"
 								onFocus={(event) => event.currentTarget.select()}
 							/>
