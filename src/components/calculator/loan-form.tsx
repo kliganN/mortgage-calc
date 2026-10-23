@@ -162,11 +162,17 @@ export function LoanForm({ issues }: LoanFormProps) {
 					aria-labelledby={paymentTypeId}
 					aria-describedby={`${paymentTypeId}-hint`}
 				>
-					<ToggleGroupItem value="annuity" className="h-11 flex-1 px-3">
-						Равные
+					<ToggleGroupItem
+						value="annuity"
+						className="h-11 flex-1 basis-48 px-3"
+					>
+						Аннуитетные
 					</ToggleGroupItem>
-					<ToggleGroupItem value="differentiated" className="h-11 flex-1 px-3">
-						Убывающие
+					<ToggleGroupItem
+						value="differentiated"
+						className="h-11 flex-1 basis-48 px-3"
+					>
+						Дифференцированные
 					</ToggleGroupItem>
 				</ToggleGroup>
 				<FieldDescription id={`${paymentTypeId}-hint`}>
