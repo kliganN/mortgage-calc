@@ -27,7 +27,10 @@ interface LoanFormProps {
 
 export function LoanForm({ issues }: LoanFormProps) {
 	const { input, patch } = useLoanStore();
-	const [termUnit, setTermUnit] = useState("years");
+	const [preferredTermUnit, setTermUnit] = useState("years");
+	// Неполные годы после загрузки показываем точно в месяцах, без скрытого округления.
+	const termUnit = input.termMonths % 12 === 0 ? preferredTermUnit : "months";
+	if (termUnit !== preferredTermUnit) setTermUnit(termUnit);
 	const termId = useId();
 	const paymentTypeId = useId();
 	const inMonths = termUnit === "months";
@@ -36,7 +39,7 @@ export function LoanForm({ issues }: LoanFormProps) {
 
 	// Срок ограничен 1–30 годами; месяцы сохраняются точно, в том числе после импорта.
 	const setTerm = (value: number) =>
-		patch({ termMonths: Math.round(inMonths ? value : value * 12) });
+		patch({ termMonths: Math.round(value) * (inMonths ? 1 : 12) });
 	const setDownShare = (share: number) =>
 		patch({ downPayment: Math.round((input.propertyPrice * share) / 100) });
 
@@ -87,7 +90,6 @@ export function LoanForm({ issues }: LoanFormProps) {
 							label="Срок кредита"
 							value={inMonths ? input.termMonths : input.termMonths / 12}
 							onChange={setTerm}
-							decimal={!inMonths}
 							min={inMonths ? MIN_YEARS * 12 : MIN_YEARS}
 							max={inMonths ? MAX_YEARS * 12 : MAX_YEARS}
 							unit={inMonths ? "мес." : "лет"}
@@ -98,7 +100,13 @@ export function LoanForm({ issues }: LoanFormProps) {
 						type="single"
 						variant="outline"
 						value={termUnit}
-						onValueChange={(value) => value && setTermUnit(value)}
+						onValueChange={(value) => {
+							if (!value) return;
+							if (value === "years") {
+								patch({ termMonths: Math.round(input.termMonths / 12) * 12 });
+							}
+							setTermUnit(value);
+						}}
 						aria-label="Единицы срока кредита"
 						className="shrink-0 self-start pt-6"
 					>
@@ -112,14 +120,14 @@ export function LoanForm({ issues }: LoanFormProps) {
 				</div>
 				<input
 					type="range"
-					min={MIN_YEARS * 12}
-					max={MAX_YEARS * 12}
+					min={inMonths ? MIN_YEARS * 12 : MIN_YEARS}
+					max={inMonths ? MAX_YEARS * 12 : MAX_YEARS}
 					step={1}
-					value={input.termMonths}
-					onChange={(event) =>
-						patch({ termMonths: Number(event.target.value) })
+					value={inMonths ? input.termMonths : input.termMonths / 12}
+					onChange={(event) => setTerm(Number(event.target.value))}
+					aria-label={
+						inMonths ? "Срок кредита в месяцах" : "Срок кредита в годах"
 					}
-					aria-label="Срок кредита в месяцах"
 					aria-valuetext={termHint}
 					aria-describedby={`${termId}-summary`}
 					className="h-6 w-full cursor-pointer accent-primary"
