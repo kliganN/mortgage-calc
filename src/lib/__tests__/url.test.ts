@@ -1,6 +1,6 @@
 import { compressToEncodedURIComponent } from "lz-string";
 import { describe, expect, it } from "vitest";
-import { buildSchedule } from "@/lib/calc";
+import { buildSchedule, validateLoanInput } from "@/lib/calc";
 import { decodeLoanInput, encodeLoanInput } from "@/lib/url";
 import { DEFAULT_LOAN } from "@/store/loan";
 
@@ -9,6 +9,66 @@ function encoded(payload: unknown): string {
 }
 
 describe("ссылки расчёта", () => {
+	it("отклоняет чрезмерно длинный вход до распаковки, включая хвост после конца потока", () => {
+		const link = encoded(DEFAULT_LOAN) + "A".repeat(65_536);
+		expect(decodeLoanInput(link)).toBeNull();
+	});
+
+	it("отклоняет сжатое расширение даже в неиспользуемом поле JSON", () => {
+		const link = encoded({ ...DEFAULT_LOAN, padding: "x".repeat(1_000_000) });
+		expect(link.length).toBeLessThan(65_536);
+		expect(decodeLoanInput(link)).toBeNull();
+	});
+
+	it("отклоняет чрезмерный список корректных старых досрочек без id", () => {
+		const earlyPayments = Array.from({ length: 601 }, () => ({
+			monthIndex: 1,
+			amount: 1,
+			strategy: "reduceTerm",
+		}));
+		expect(
+			decodeLoanInput(encoded({ ...DEFAULT_LOAN, earlyPayments })),
+		).toBeNull();
+	});
+
+	it("не разрешает создать ссылку на расчёт сверх лимита досрочек", () => {
+		const input = {
+			...DEFAULT_LOAN,
+			earlyPayments: Array.from({ length: 601 }, (_, index) => ({
+				id: `e${index}`,
+				monthIndex: 1,
+				amount: 1,
+				strategy: "reduceTerm" as const,
+			})),
+		};
+		expect(
+			validateLoanInput(input).some((issue) => issue.field === "earlyPayments"),
+		).toBe(true);
+		expect(() => encodeLoanInput(input)).toThrow();
+	});
+
+	it("отклоняет чрезмерно длинный идентификатор досрочки", () => {
+		const earlyPayments = [
+			{ id: "x".repeat(129), monthIndex: 1, amount: 1, strategy: "reduceTerm" },
+		];
+		expect(
+			decodeLoanInput(encoded({ ...DEFAULT_LOAN, earlyPayments })),
+		).toBeNull();
+	});
+
+	it("сохраняет обмен расчётом с 600 досрочками и UUID", () => {
+		const input = {
+			...DEFAULT_LOAN,
+			earlyPayments: Array.from({ length: 600 }, (_, index) => ({
+				id: `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`,
+				monthIndex: 1,
+				amount: 1,
+				strategy: "reduceTerm" as const,
+			})),
+		};
+		expect(decodeLoanInput(encodeLoanInput(input))).toEqual(input);
+	});
+
 	it("сохраняет параметры и досрочки при обмене ссылкой", () => {
 		const input = {
 			...DEFAULT_LOAN,

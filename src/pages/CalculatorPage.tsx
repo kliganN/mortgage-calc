@@ -78,6 +78,14 @@ export default function CalculatorPage() {
 		[input],
 	);
 	const valid = issues.size === 0;
+	const encodedInput = useMemo(() => {
+		if (!valid) return null;
+		try {
+			return encodeLoanInput(input);
+		} catch {
+			return null;
+		}
+	}, [input, valid]);
 	const baselineInput = useMemo(
 		() => ({ ...input, earlyPayments: [], recurringExtra: null }),
 		[input],
@@ -171,7 +179,11 @@ export default function CalculatorPage() {
 					</Button>
 					<Dialog>
 						<DialogTrigger asChild>
-							<Button variant="outline" className="h-11" disabled={!valid}>
+							<Button
+								variant="outline"
+								className="h-11"
+								disabled={encodedInput === null}
+							>
 								<Link2 data-icon="inline-start" />
 								Поделиться
 							</Button>
@@ -189,18 +201,30 @@ export default function CalculatorPage() {
 								id="share-url"
 								readOnly
 								value={
-									typeof window === "undefined" ? "" : buildShareUrl(input)
+									encodedInput === null || typeof window === "undefined"
+										? ""
+										: buildShareUrl(input)
 								}
 								className="h-11"
 								onFocus={(event) => event.currentTarget.select()}
 							/>
-							<Button className="h-11" disabled={copying} onClick={copyLink}>
+							<Button
+								className="h-11"
+								disabled={copying || encodedInput === null}
+								onClick={copyLink}
+							>
 								{copying ? "Копирование…" : "Скопировать ссылку"}
 							</Button>
 						</DialogContent>
 					</Dialog>
 				</div>
 			</header>
+			{valid && encodedInput === null && (
+				<p role="status" className="text-sm text-muted-foreground">
+					Расчёт слишком велик для передачи ссылкой. Сократите список досрочных
+					платежей; расчёт, Excel и печать остаются доступны.
+				</p>
+			)}
 			{invalidLink && (
 				<Alert variant="destructive">
 					<AlertTitle>
@@ -323,7 +347,14 @@ export default function CalculatorPage() {
 								{exporting ? "Подготовка…" : "Скачать Excel"}
 							</Button>
 							<Button variant="outline" className="h-11" asChild>
-								<Link to={`/report?s=${encodeLoanInput(input)}`}>
+								{/* Большой локальный расчёт отчёт читает из общего состояния вкладки. */}
+								<Link
+									to={
+										encodedInput === null
+											? "/report"
+											: `/report?s=${encodedInput}`
+									}
+								>
 									<FileText data-icon="inline-start" />
 									Печать / PDF
 								</Link>

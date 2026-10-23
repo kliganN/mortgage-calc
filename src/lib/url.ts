@@ -1,13 +1,17 @@
-import {
-	compressToEncodedURIComponent,
-	decompressFromEncodedURIComponent,
-} from "lz-string";
+import { compressToEncodedURIComponent } from "lz-string";
 import {
 	type EarlyPayment,
 	type LoanInput,
+	MAX_EARLY_PAYMENT_ID_LENGTH,
+	MAX_EARLY_PAYMENTS,
 	type RecurringExtra,
 	validateLoanInput,
 } from "@/lib/calc";
+import {
+	decodeSharedJson,
+	MAX_SHARE_ENCODED_LENGTH,
+	MAX_SHARE_JSON_LENGTH,
+} from "@/lib/share-codec";
 import { DEFAULT_LOAN } from "@/store/loan";
 
 const LINK_VERSION = 1;
@@ -17,9 +21,39 @@ const LINK_VERSION = 1;
  * lz-string сжимает JSON в URL-безопасную строку — расчёт умещается в одну ссылку.
  */
 export function encodeLoanInput(input: LoanInput): string {
-	return compressToEncodedURIComponent(
-		JSON.stringify({ ...input, version: LINK_VERSION }),
-	);
+	if (validateLoanInput(input).length > 0)
+		throw new Error("Некорректные параметры ссылки");
+	// Сериализуем только поля модели, без произвольных дополнительных данных.
+	const json = JSON.stringify({
+		propertyPrice: input.propertyPrice,
+		downPayment: input.downPayment,
+		termMonths: input.termMonths,
+		annualRate: input.annualRate,
+		paymentType: input.paymentType,
+		startDate: input.startDate,
+		earlyPayments: input.earlyPayments.map(
+			({ id, monthIndex, amount, strategy }) => ({
+				id,
+				monthIndex,
+				amount,
+				strategy,
+			}),
+		),
+		recurringExtra: input.recurringExtra
+			? {
+					amount: input.recurringExtra.amount,
+					strategy: input.recurringExtra.strategy,
+					startMonthIndex: input.recurringExtra.startMonthIndex,
+				}
+			: null,
+		version: LINK_VERSION,
+	});
+	if (json.length > MAX_SHARE_JSON_LENGTH)
+		throw new Error("Расчёт слишком велик для ссылки");
+	const encoded = compressToEncodedURIComponent(json);
+	if (encoded.length > MAX_SHARE_ENCODED_LENGTH)
+		throw new Error("Расчёт слишком велик для ссылки");
+	return encoded;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -31,7 +65,16 @@ function isStrategy(value: unknown): value is EarlyPayment["strategy"] {
 }
 
 function parseEarlyPayments(value: unknown): EarlyPayment[] | null {
-	if (!Array.isArray(value)) return null;
+	if (!Array.isArray(value) || value.length > MAX_EARLY_PAYMENTS) return null;
+	if (
+		value.some(
+			(p) =>
+				isRecord(p) &&
+				typeof p.id === "string" &&
+				p.id.length > MAX_EARLY_PAYMENT_ID_LENGTH,
+		)
+	)
+		return null;
 	const payments: EarlyPayment[] = [];
 	const ids = new Set<string>();
 	const reservedIds = new Set(
@@ -53,6 +96,7 @@ function parseEarlyPayments(value: unknown): EarlyPayment[] | null {
 		if (p.id === undefined) {
 			while (reservedIds.has(id)) id += "-";
 		}
+		if (id.length > MAX_EARLY_PAYMENT_ID_LENGTH) return null;
 		if (ids.has(id)) return null;
 		ids.add(id);
 		payments.push({
@@ -89,7 +133,7 @@ function parseRecurringExtra(
 export function decodeLoanInput(encoded: string | null): LoanInput | null {
 	if (!encoded) return null;
 	try {
-		const json = decompressFromEncodedURIComponent(encoded);
+		const json = decodeSharedJson(encoded);
 		if (!json) return null;
 		const parsed: unknown = JSON.parse(json);
 		if (
@@ -137,7 +181,10 @@ export function decodeLoanInput(encoded: string | null): LoanInput | null {
 			earlyPayments,
 			recurringExtra,
 		};
-		return validateLoanInput(input).length === 0 ? input : null;
+		if (validateLoanInput(input).length > 0) return null;
+		// Любой принятый расчёт можно снова передать ссылкой и открыть как отчёт.
+		encodeLoanInput(input);
+		return input;
 	} catch {
 		return null;
 	}

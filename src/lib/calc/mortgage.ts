@@ -13,6 +13,7 @@ import type {
 	ScheduleResult,
 	ScheduleRow,
 } from "./types";
+import { MAX_EARLY_PAYMENT_ID_LENGTH, MAX_EARLY_PAYMENTS } from "./types";
 
 /**
  * Аннуитетный платёж.
@@ -98,7 +99,20 @@ export function validateLoanInput(input: LoanInput): LoanIssue[] {
 	) {
 		issues.push({ field: "paymentType", message: "Неизвестный тип платежа" });
 	}
+	if (input.earlyPayments.length > MAX_EARLY_PAYMENTS) {
+		issues.push({
+			field: "earlyPayments",
+			message: `Не больше ${MAX_EARLY_PAYMENTS} разовых досрочных платежей`,
+		});
+		return issues;
+	}
 	for (const p of input.earlyPayments) {
+		if (!p.id || p.id.length > MAX_EARLY_PAYMENT_ID_LENGTH) {
+			issues.push({
+				field: "earlyPayments",
+				message: "Некорректный идентификатор досрочного платежа",
+			});
+		}
 		if (!isSafeMoney(p.amount) || !(p.amount > 0)) {
 			issues.push({
 				field: "earlyPayments",

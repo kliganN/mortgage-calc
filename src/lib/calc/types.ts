@@ -1,6 +1,10 @@
 /** Тип платежа: аннуитетный или дифференцированный. */
 export type PaymentType = "annuity" | "differentiated";
 
+/** Общий бюджет редактора, расчёта и обмена ссылками. */
+export const MAX_EARLY_PAYMENTS = 600;
+export const MAX_EARLY_PAYMENT_ID_LENGTH = 128;
+
 /** Стратегия досрочного погашения: уменьшить срок или уменьшить ежемесячный платёж. */
 export type EarlyPaymentStrategy = "reduceTerm" | "reducePayment";
 

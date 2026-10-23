@@ -23,7 +23,11 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import type { EarlyPayment, EarlyPaymentStrategy } from "@/lib/calc";
+import {
+	type EarlyPayment,
+	type EarlyPaymentStrategy,
+	MAX_EARLY_PAYMENTS,
+} from "@/lib/calc";
 import { useLoanStore } from "@/store/loan";
 
 const STRATEGY_LABELS: Record<EarlyPaymentStrategy, string> = {
@@ -136,6 +140,8 @@ export function EarlyPaymentsEditor({
 						type="button"
 						variant="outline"
 						className="h-11 w-full"
+						disabled={earlyPayments.length >= MAX_EARLY_PAYMENTS}
+						title={`Можно добавить до ${MAX_EARLY_PAYMENTS} разовых платежей`}
 						onClick={() =>
 							setEarlyPayments([
 								...earlyPayments,
