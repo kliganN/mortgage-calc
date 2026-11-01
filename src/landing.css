@@ -68,6 +68,12 @@ body {
 	letter-spacing: -0.055em;
 }
 
+.landing-heading-period {
+	margin-inline-start: 0.12em;
+	font-size: 0.6em;
+	letter-spacing: 0;
+}
+
 .landing-lead {
 	max-width: 33ch;
 	margin-top: var(--landing-space-lg);

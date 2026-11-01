@@ -22,8 +22,9 @@ export default function LandingPage() {
 			<section className="landing-hero" aria-labelledby="landing-title">
 				<div className="landing-hero-copy">
 					<h1 id="landing-title">
-						Ваша ипотека.
-						<br />В понятных цифрах.
+						Ваша ипотека<span className="landing-heading-period">.</span>
+						<br />В понятных цифрах
+						<span className="landing-heading-period">.</span>
 					</h1>
 					<p className="landing-lead">
 						Платёж, переплата и досрочное погашение. Посчитайте до решения о
