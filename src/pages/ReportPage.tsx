@@ -1,5 +1,5 @@
-import { Printer } from "lucide-react";
-import { useEffect, useMemo } from "react";
+import { FileDown, LoaderCircle, Printer } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,8 @@ export default function ReportPage() {
 	const storeInput = useLoanStore((s) => s.input);
 	const patch = useLoanStore((s) => s.patch);
 	const location = useLocation();
+	const [exportingPdf, setExportingPdf] = useState(false);
+	const [exportError, setExportError] = useState<string | null>(null);
 
 	// Приоритет: параметры из ссылки (?s=…), иначе — текущее состояние калькулятора.
 	const { restored, invalidLink } = useMemo(() => {
@@ -51,16 +53,56 @@ export default function ReportPage() {
 		() => (invalidLink || issues.length > 0 ? null : buildSchedule(input)),
 		[input, invalidLink, issues.length],
 	);
+	const savePdf = async () => {
+		if (!schedule || exportingPdf) return;
+		setExportingPdf(true);
+		setExportError(null);
+		try {
+			const { exportScheduleToPdf } = await import("@/lib/export/pdf");
+			await exportScheduleToPdf(input, schedule);
+		} catch {
+			setExportError(
+				"Не удалось сохранить PDF. Попробуйте ещё раз или воспользуйтесь печатью.",
+			);
+		} finally {
+			setExportingPdf(false);
+		}
+	};
 	const toolbar = (
 		<div className="mb-6 flex flex-wrap items-center justify-between gap-3 print:hidden">
 			<h1 className="text-xl font-semibold">Отчёт для печати</h1>
-			<Button
-				className="h-11"
-				disabled={schedule === null}
-				onClick={() => globalThis.print()}
-			>
-				<Printer data-icon="inline-start" /> Печать / Сохранить в PDF
-			</Button>
+			<div className="flex flex-wrap items-center gap-2">
+				<Button
+					className="h-11"
+					disabled={schedule === null || exportingPdf}
+					aria-busy={exportingPdf}
+					onClick={savePdf}
+				>
+					{exportingPdf ? (
+						<LoaderCircle
+							data-icon="inline-start"
+							className="motion-safe:animate-spin"
+							aria-hidden="true"
+						/>
+					) : (
+						<FileDown data-icon="inline-start" aria-hidden="true" />
+					)}
+					{exportingPdf ? "Подготовка PDF…" : "Сохранить PDF"}
+				</Button>
+				<Button
+					variant="outline"
+					className="h-11"
+					disabled={schedule === null}
+					onClick={() => globalThis.print()}
+				>
+					<Printer data-icon="inline-start" aria-hidden="true" /> Печать
+				</Button>
+			</div>
+			{exportError && (
+				<p role="alert" className="w-full text-sm text-destructive">
+					{exportError}
+				</p>
+			)}
 		</div>
 	);
 

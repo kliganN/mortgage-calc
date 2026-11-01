@@ -17,6 +17,15 @@ function renderReport(url: string): string {
 }
 
 describe("печатный отчёт", () => {
+	it("предлагает отдельные действия для скачивания PDF и печати", () => {
+		const html = renderReport("/report");
+		const buttons = (
+			html.match(/<button\b[^>]*>[\s\S]*?<\/button>/g) ?? []
+		).map((button) => button.replace(/<[^>]*>/g, "").trim());
+		expect(buttons).toContain("Сохранить PDF");
+		expect(buttons).toContain("Печать");
+	});
+
 	it.each(["/report?s=broken", "/report?s="])(
 		"не подменяет повреждённую ссылку другим расчётом: %s",
 		(url) => {
