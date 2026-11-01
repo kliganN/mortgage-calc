@@ -1,5 +1,5 @@
 const BRAND = "Ипотека — прозрачно";
-export const PUBLIC_PATHS = ["/calculator", "/about"] as const;
+export const PUBLIC_PATHS = ["/", "/calculator", "/about"] as const;
 
 export interface PageSeo {
 	title: string;
@@ -35,23 +35,34 @@ export function normalizeSiteUrl(value: string | undefined): string | null {
 export function getSeo(location: string, siteUrl: string | null): PageSeo {
 	const [pathname = "/", search = ""] = location.split("?");
 	const path = pathname.replace(/\/+$/, "") || "/";
-	const calculator = ["/", "/calculator", "/charts"].includes(path);
+	const home = path === "/";
+	const calculator = ["/calculator", "/charts"].includes(path);
 	const about = path === "/about";
-	const canonicalPath = calculator ? "/calculator" : about ? "/about" : null;
+	const canonicalPath = home
+		? "/"
+		: calculator
+			? "/calculator"
+			: about
+				? "/about"
+				: null;
 	const canonical =
 		siteUrl && canonicalPath ? `${siteUrl}${canonicalPath}` : null;
-	const title = calculator
-		? "Ипотечный калькулятор с досрочным погашением"
-		: about
-			? "Помощь по ипотечному калькулятору"
-			: path === "/report"
-				? "Отчёт по ипотеке для печати"
-				: "Страница не найдена";
-	const description = calculator
-		? "Рассчитайте платёж по ипотеке, переплату и досрочное погашение. Сравните уменьшение срока и платежа, изучите график и скачайте Excel. Без регистрации."
-		: about
-			? "Простые ответы о расчёте ипотеки: платежи, досрочное погашение, сравнение вариантов, сохранение расчётов и скачивание графика в Excel или PDF."
-			: "Вернитесь к ипотечному калькулятору, чтобы рассчитать платёж и график погашения.";
+	const title = home
+		? "Ваша ипотека в понятных цифрах"
+		: calculator
+			? "Ипотечный калькулятор с досрочным погашением"
+			: about
+				? "Помощь по ипотечному калькулятору"
+				: path === "/report"
+					? "Отчёт по ипотеке для печати"
+					: "Страница не найдена";
+	const description = home
+		? "Разберитесь в ипотеке до решения: узнайте ежемесячный платёж, проценты и срок. Изучите досрочное погашение и сохраните график. Расчёты в вашем браузере."
+		: calculator
+			? "Рассчитайте платёж по ипотеке, переплату и досрочное погашение. Сравните уменьшение срока и платежа, изучите график и скачайте Excel. Без регистрации."
+			: about
+				? "Простые ответы о расчёте ипотеки: платежи, досрочное погашение, сравнение вариантов, сохранение расчётов и скачивание графика в Excel или PDF."
+				: "Вернитесь к ипотечному калькулятору, чтобы рассчитать платёж и график погашения.";
 	return {
 		title: `${title} | ${BRAND}`,
 		description,

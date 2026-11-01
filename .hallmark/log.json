@@ -1,0 +1,27 @@
+[
+	{
+		"shape": "Ипотечный расчёт от платежа к решению",
+		"theme": "brand",
+		"axes": "light/grotesk-sans/cool",
+		"hero": "Stage",
+		"nav": "existing project navigation",
+		"footer": "existing project colophon",
+		"imagery": "real SummaryCards component and calculated debt chart",
+		"photos": [],
+		"entry": "src/pages/LandingPage.tsx",
+		"fingerprint": "split-hero,real-loan-summary,early-payment-comparison,open-feature-list,privacy-close",
+		"sections": [
+			"Hero",
+			"Early payment example",
+			"Schedule and export",
+			"Privacy",
+			"Footer"
+		],
+		"signature": "Настоящий результат калькулятора",
+		"waived": [],
+		"prompt": "Главная Hero Page на основе дизайна ипотечного калькулятора",
+		"verification": "sloplint 0 FAIL 0 REFLEX 0 WARN; render fallback in-app browser; hero and finish review ship",
+		"date": "2026-11-01",
+		"mode": "build"
+	}
+]

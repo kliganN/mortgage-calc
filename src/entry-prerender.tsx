@@ -4,6 +4,7 @@ import App from "./App";
 import { normalizeSiteUrl } from "./lib/seo";
 import AboutPage from "./pages/AboutPage";
 import CalculatorPage from "./pages/CalculatorPage";
+import LandingPage from "./pages/LandingPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import ReportPage from "./pages/ReportPage";
 
@@ -16,7 +17,7 @@ export function render(path: string): string {
 		<StaticRouter location={path}>
 			<Routes>
 				<Route element={<App />}>
-					<Route index element={<CalculatorPage />} />
+					<Route index element={<LandingPage />} />
 					<Route path="calculator" element={<CalculatorPage />} />
 					<Route path="charts" element={<CalculatorPage />} />
 					<Route path="about" element={<AboutPage />} />

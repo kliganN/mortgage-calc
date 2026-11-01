@@ -34,9 +34,13 @@ const application = (
 // На публичных страницах сохраняем готовый HTML до загрузки интерактивности.
 // Редиректы и отчёт зависят от URL/текущего расчёта и монтируются отдельно.
 const path = window.location.pathname.replace(/\/+$/, "") || "/";
+// Готовый HTML главной не содержит редирект персональной ссылки: монтируем его отдельно.
+const sharedLanding =
+	path === "/" && new URLSearchParams(window.location.search).has("s");
 if (
 	root.hasAttribute("data-prerender") &&
-	["/calculator", "/about"].includes(path)
+	!sharedLanding &&
+	["/", "/calculator", "/about"].includes(path)
 ) {
 	hydrateRoot(root, application);
 } else {

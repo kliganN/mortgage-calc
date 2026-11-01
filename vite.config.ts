@@ -13,13 +13,13 @@ function staticPagePreview(): Plugin {
 			server.middlewares.use((req, res, next) => {
 				const url = new URL(req.url ?? "/", "http://preview.local");
 				const path = url.pathname.replace(/\/+$/, "") || "/";
-				if (path === "/" || path === "/charts") {
+				if (path === "/charts") {
 					res.writeHead(301, { Location: `/calculator${url.search}` });
 					res.end();
 					return;
 				}
-				if (["/calculator", "/about", "/report"].includes(path)) {
-					req.url = `${path}/index.html${url.search}`;
+				if (["/", "/calculator", "/about", "/report"].includes(path)) {
+					req.url = `${path === "/" ? "" : path}/index.html${url.search}`;
 					next();
 					return;
 				}

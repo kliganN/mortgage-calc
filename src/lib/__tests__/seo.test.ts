@@ -3,6 +3,8 @@ import { getSeo, normalizeSiteUrl, renderSeoHead, renderSitemap } from "../seo";
 
 describe("SEO до публикации", () => {
 	it("не индексирует сборку без публичного домена", () => {
+		expect(getSeo("/", null).robots).toBe("noindex, follow");
+		expect(getSeo("/", null).canonical).toBeNull();
 		expect(getSeo("/calculator", null).robots).toBe("noindex, follow");
 		expect(getSeo("/calculator", null).canonical).toBeNull();
 		expect(renderSitemap(null)).toBeNull();
@@ -28,9 +30,20 @@ describe("SEO до публикации", () => {
 		expect(getSeo("/calculator?s=private", origin).canonical).toBe(
 			`${origin}/calculator`,
 		);
-		expect(getSeo("/", origin).canonical).toBe(`${origin}/calculator`);
 		expect(getSeo("/charts", origin).canonical).toBe(`${origin}/calculator`);
 		expect(getSeo("/calculator", origin).robots).toBe("index, follow");
+	});
+	it("выделяет главную страницу и закрывает ссылки с расчётами от индексации", () => {
+		const origin = "https://example.org";
+		const home = getSeo("/", origin);
+		const calculator = getSeo("/calculator", origin);
+		expect(home.canonical).toBe(`${origin}/`);
+		expect(home.robots).toBe("index, follow");
+		expect(home.title).not.toBe(calculator.title);
+		expect(home.description).not.toBe(calculator.description);
+		for (const path of ["/?s=private", "/calculator?s=private"]) {
+			expect(getSeo(path, origin).robots).toBe("noindex, follow");
+		}
 	});
 	it("не индексирует отчёты и неизвестные страницы", () => {
 		for (const path of ["/report?s=private", "/missing"]) {
@@ -46,7 +59,8 @@ describe("SEO до публикации", () => {
 		const about = getSeo("/about", origin);
 		expect(calc.title).not.toBe(about.title);
 		expect(calc.description).not.toBe(about.description);
-		expect(renderSitemap(origin)?.match(/<loc>/g)).toHaveLength(2);
+		expect(renderSitemap(origin)?.match(/<loc>/g)).toHaveLength(3);
+		expect(renderSitemap(origin)).toContain(`<loc>${origin}/</loc>`);
 		expect(renderSitemap(origin)).not.toMatch(/report|charts|private/);
 		const head = renderSeoHead(calc);
 		expect(head).toContain('rel="canonical"');

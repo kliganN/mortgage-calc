@@ -15,9 +15,9 @@ export function FloatingNavbar() {
 		<header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur-md print:hidden">
 			<div className="mx-auto flex max-w-[1440px] items-center justify-between gap-2 px-4 py-2.5 sm:px-8">
 				<Link
-					to="/calculator"
+					to="/"
 					className="flex min-h-11 items-center gap-2.5 rounded-lg font-semibold tracking-tight"
-					aria-label="Ипотека — калькулятор"
+					aria-label="Ипотека — главная"
 				>
 					<span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
 						<Landmark className="size-5" aria-hidden />
@@ -37,8 +37,7 @@ export function FloatingNavbar() {
 					{LINKS.map(({ to, label, icon: Icon }) => {
 						const active =
 							pathname === to ||
-							(to === "/calculator" &&
-								(pathname === "/" || pathname === "/charts"));
+							(to === "/calculator" && pathname === "/charts");
 						return (
 							<Link
 								key={to}

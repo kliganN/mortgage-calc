@@ -1,10 +1,23 @@
-import { Suspense } from "react";
-import { Link, Outlet } from "react-router";
+import { Suspense, useEffect, useRef } from "react";
+import { Link, Outlet, useLocation } from "react-router";
 import { FloatingNavbar } from "@/components/floating-navbar";
 import { PageSeo } from "@/components/page-seo";
 import { Toaster } from "@/components/ui/sonner";
 
 export default function App() {
+	const { pathname, hash } = useLocation();
+	const previousPath = useRef(pathname);
+	useEffect(() => {
+		// После примера в середине главной калькулятор открывается с начала.
+		if (
+			previousPath.current !== pathname &&
+			(previousPath.current === "/" || pathname === "/") &&
+			!hash
+		) {
+			window.scrollTo(0, 0);
+		}
+		previousPath.current = pathname;
+	}, [pathname, hash]);
 	return (
 		<div className="flex min-h-screen flex-col bg-background text-foreground">
 			<PageSeo />

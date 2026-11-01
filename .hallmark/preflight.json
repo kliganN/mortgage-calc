@@ -1,0 +1,16 @@
+{
+	"scanned": "2026-11-01",
+	"findings": {
+		"fonts": "Geist Variable, src/index.css:4",
+		"palette": "Изумруд финтех, src/index.css:74, primary #047857",
+		"framework": "React 19, Vite 8, Tailwind 4, package.json",
+		"product": "Локальный калькулятор /calculator; Hero использует существующий SummaryCards с DEFAULT_LOAN"
+	},
+	"preserve": ["палитра", "шрифт", "радиусы", "калькулятор", "ссылки s"],
+	"introduce": [
+		"главная страница",
+		"композиция Hero",
+		"пример досрочного погашения"
+	],
+	"execution": "Текущая ветка dev/ui; изменения пользователя сохранены, без коммитов и переключения рабочего каталога"
+}
