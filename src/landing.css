@@ -16,6 +16,11 @@
 	--landing-heading: clamp(2.25rem, 3.5vw, 3.5rem);
 	--landing-ease: cubic-bezier(0.22, 1, 0.36, 1);
 	--landing-duration: 160ms;
+	--landing-preview-border: color-mix(
+		in oklab,
+		var(--primary) 60%,
+		var(--border)
+	);
 	--landing-muted: color-mix(
 		in oklab,
 		var(--muted-foreground) 92%,
@@ -169,7 +174,7 @@ body {
 
 .landing-summary > [data-slot="card"] {
 	box-shadow: none;
-	border-color: var(--border);
+	border: 2px solid var(--landing-preview-border);
 	border-radius: calc(var(--radius) * 1.8);
 	padding-block: var(--landing-space-xl);
 }

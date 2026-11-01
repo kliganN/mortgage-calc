@@ -32,7 +32,7 @@ export function EarlyPaymentExample() {
 	return (
 		<section className="landing-early" aria-labelledby="early-title">
 			<div className="landing-early-copy">
-				<h2 id="early-title">Досрочка меняет весь график.</h2>
+				<h2 id="early-title">Досрочный платёж меняет весь график.</h2>
 				<p className="landing-section-lead">
 					Добавим к тому же кредиту{" "}
 					{formatRub(LANDING_EXTRA_LOAN.recurringExtra.amount * 100)} в месяц с
