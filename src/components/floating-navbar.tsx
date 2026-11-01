@@ -1,8 +1,15 @@
 import { cn } from "cn";
-import { Calculator, CircleHelp, FileText, Landmark } from "lucide-react";
+import {
+	Calculator,
+	CircleHelp,
+	FileText,
+	House,
+	Landmark,
+} from "lucide-react";
 import { Link, useLocation } from "react-router";
 
 const LINKS = [
+	{ to: "/", label: "Главная", icon: House },
 	{ to: "/calculator", label: "Расчёт", icon: Calculator },
 	{ to: "/report", label: "Отчёт", icon: FileText },
 	{ to: "/about", label: "Помощь", icon: CircleHelp },
@@ -22,7 +29,7 @@ export function FloatingNavbar() {
 					<span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
 						<Landmark className="size-5" aria-hidden />
 					</span>
-					<span className="hidden sm:inline">
+					<span className="hidden md:inline">
 						Ипотека
 						<span className="font-normal text-muted-foreground">
 							{" "}
@@ -44,7 +51,7 @@ export function FloatingNavbar() {
 								to={to}
 								aria-current={active ? "page" : undefined}
 								className={cn(
-									"flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-medium transition-colors sm:px-4",
+									"flex min-h-11 items-center gap-2 rounded-xl px-2 text-sm font-medium transition-colors max-[359px]:px-1.5 max-[359px]:text-xs sm:px-4",
 									active
 										? "bg-secondary text-secondary-foreground"
 										: "text-muted-foreground hover:bg-muted hover:text-foreground",

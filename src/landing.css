@@ -61,6 +61,8 @@ body {
 }
 
 .landing h1 {
+	-webkit-user-select: none;
+	user-select: none;
 	max-width: 12ch;
 	font-size: var(--landing-display);
 	font-weight: 600;
