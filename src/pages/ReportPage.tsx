@@ -138,7 +138,7 @@ export default function ReportPage() {
 	}
 
 	return (
-		<div className="mx-auto max-w-4xl bg-white text-slate-900">
+		<div className="mx-auto max-w-4xl text-slate-900 print:bg-white">
 			{toolbar}
 
 			<header className="mb-4 hidden print:block">
@@ -150,7 +150,7 @@ export default function ReportPage() {
 				</p>
 			</header>
 
-			<section className="mb-4 grid grid-cols-2 gap-x-8 gap-y-1 rounded-lg border border-slate-200 p-4 text-sm sm:grid-cols-3">
+			<section className="mb-4 grid grid-cols-2 gap-x-8 gap-y-1 rounded-lg border border-slate-200 bg-white p-4 text-sm sm:grid-cols-3">
 				<ReportMetric
 					label="Сумма кредита"
 					value={formatRubPrecise(schedule.loanAmount)}
@@ -214,7 +214,7 @@ export default function ReportPage() {
 				/>
 			</section>
 
-			<div className="overflow-x-auto rounded-lg border border-slate-200">
+			<div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
 				<Table className="bg-white text-xs text-slate-900">
 					<TableHeader>
 						<TableRow className="border-slate-300">
